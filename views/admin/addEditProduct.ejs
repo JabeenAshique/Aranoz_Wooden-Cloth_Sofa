@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+<!-- cropper js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<style>
+    .navbar.bg-light {
+      background-color: #569c79 !important;
+    }
+    .offcanvas.bg-light {
+      background-color: #569c79 !important;
+    }
+    .navbar-light .navbar-nav .nav-link {
+      color: #ffffff !important;
+    }
+    .offcanvas .navbar-nav .nav-link {
+      color: #ffffff !important;
+    }
+    main {
+      margin-top: 56px; /* Adjust this based on your navbar height */
+      height: calc(100vh - 56px); /* Full height minus navbar */
+      overflow: auto;
+      margin-left: 270px; /* Adjust this based on your sidebar width */
+    }
+    .sidebar-nav {
+      width: 270px; /* Adjust this based on your sidebar width */
+      height: calc(100vh - 56px);
+      top: 56px;
+      overflow-y: auto;
+      position: fixed;
+      left: 0;
+    }
+    .navbar-brand {
+      color: white !important;
+    }
+    .content {
+      padding: 20px; /* Add some padding for better spacing */
+    }
+    .container-fluid {
+      padding: 0 20px; /* Adjust padding to reduce space */
+    }
+   
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+  <div class="container-fluid">
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="offcanvasExample">
+      <span class="navbar-toggler-icon" data-bs-target="#sidebar"></span>
+    </button>
+    <a class="navbar-brand me-auto ms-lg-0 ms-3 text-uppercase fw-bold" href="#">Online Book Store</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavBar" aria-controls="topNavBar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <!-- <div class="collapse navbar-collapse" id="topNavBar">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link ms-2" href="/dashboard" role="button" aria-expanded="false">
+            <i class="bi bi-person-fill"> Logout</i>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div> -->
+</nav>
+
+<div class="offcanvas offcanvas-start sidebar-nav bg-light" tabindex="-1" id="sidebar">
+  <div class="offcanvas-body p-0">
+    <nav class="navbar-light">
+      <ul class="navbar-nav">
+        <li>
+          <a href="#" class="nav-link px-3 active">
+            <span class="me-2"><i class="bi bi-speedometer2"></i></span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
+        <li>
+          <a href="/admin/category" class="nav-link px-3">
+            <span class="me-2"><i class="bi bi-book-fill"></i></span>
+            <span>Category</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/product" class="nav-link px-3">
+            <span class="me-2"><i class="bi bi-book-fill"></i></span>
+            <span>Product</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/customers" class="nav-link px-3">
+            <span class="me-2"><i class="bi bi-book-fill"></i></span>
+            <span>User</span>
+          </a>
+        </li>
+        <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<main class="mt-5 pt-3">
+  <div class="container-fluid content">    
+    <div class="row">
+      <div class="col-md-12">
+        <h2><%= product ? 'Edit Product' : 'Add Product' %></h2>
+        <form id="productForm" action="<%= product ? '/admin/product/edit/' + product._id : '/admin/product/add' %>" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="productName" class="form-label">Product Name</label>
+                <input type="text" class="form-control" id="productName" name="productName" value="<%= product ? product.productName : '' %>" required>
+                <div class="invalid-feedback">Product name is required.</div>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" required><%= product ? product.description : '' %></textarea>
+                <div class="invalid-feedback">Description is required.</div>
+            </div>
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-control" id="category" name="category" required>
+                    <% categories.forEach(category => { %>
+                        <option value="<%= category._id %>" <%= product && product.category.equals(category._id) ? 'selected' : '' %>><%= category.name %></option>
+                    <% }) %>
+                </select>
+                <div class="invalid-feedback">Category is required.</div>
+            </div>
+            <div class="mb-3">
+                <label for="regularPrice" class="form-label">Regular Price</label>
+                <input type="number" class="form-control" id="regularPrice" name="regularPrice" value="<%= product ? product.regularPrice : '' %>" min="0" required>
+                <div class="invalid-feedback">Regular price must be a positive number.</div>
+            </div>
+            <div class="mb-3">
+                <label for="salePrice" class="form-label">Sale Price</label>
+                <input type="number" class="form-control" id="salePrice" name="salePrice" value="<%= product ? product.salePrice : '' %>" min="0" required>
+                <div class="invalid-feedback">Sale price must be a positive number.</div>
+            </div>
+            <div class="mb-3">
+                <label for="productOffer" class="form-label">Product Offer (%)</label>
+                <input type="number" class="form-control" id="productOffer" name="productOffer" value="<%= product ? product.productOffer : '' %>" min="0" max="100" required>
+                <div class="invalid-feedback">Product offer must be between 0 and 100.</div>
+            </div>
+            <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="quantity" name="quantity" value="<%= product ? product.quantity : '' %>" min="0" required>
+                <div class="invalid-feedback">Quantity must be at least 1.</div>
+            </div>
+            <!-- <div class="mb-3">
+                <label for="averageRating" class="form-label">Average Rating</label>
+                <input type="number" class="form-control" id="averageRating" name="averageRating" value="<%= product ? product.averageRating : '' %>" min="0" max="5" step="0.1" required>
+                <div class="invalid-feedback">Rating must be between 0 and 5.</div>
+            </div> -->
+        <!-- More form fields -->
+
+        <div class="form-group">
+          <label for="productImage">Product Images</label>
+          <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" multiple>
+          <div class="invalid-feedback">Product images are required.</div>
+          <div id="new-image-container"></div>
+        </div>
+        <% if (product && product.productImage.length > 0) { %>
+          <div id="image-container">
+            <% product.productImage.forEach((image, index) => { %>
+              <div class="img-thumbnail-wrapper" id="image-<%= index %>">
+                <img src="<%= image %>" alt="Product Image" class="img-thumbnail" style="width: 150px; height: auto;">
+                <button type="button" class="btn btn-danger btn-sm remove-image" data-index="<%= index %>" data-product-id="<%= product._id %>">Remove</button>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+        <button type="submit" class="btn btn-primary"><%= product ? 'Update Product' : 'Add Product' %></button>
+    </form>
+    <div class="toast-container position-fixed p-3 bottom-0" style="top: 400px; right: 0; z-index: 1055;">
+      
+      <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+        <div class="toast-body" id="toast-body"></div>
+      </div>
+    </div>
+</div>
+
+               
+                  
+</div>
+</div>
+</div>
+</main>
+<link rel="stylesheet" href="/css/dataTables.bootstrap5.min.css">
+
+<script src="../../js/productManagement.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+        
+</body>
+</html>

@@ -1,0 +1,93 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+  }
+  
+  .login-container {
+    background-image: url('/public/images/login-bg.jpg'); /* Path to your background image */
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .login-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Black overlay with 50% opacity */
+  }
+  
+  .login-form {
+    position: relative;
+    background: rgba(255, 255, 255, 0.9); /* Slightly transparent white background */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    z-index: 1;
+    width: 100%;
+    max-width: 400px; /* Adjusted max-width for responsiveness */
+    margin: 20px; /* Margin for spacing */
+  }
+  
+  .login-form h1 {
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  .login-form p {
+    margin-bottom: 20px;
+    color: #555;
+  }
+  
+  .login-form .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .login-form .form-control {
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+  }
+  
+  .login-form .btn {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+  }
+  
+  .create-account {
+    margin-top: 10px;
+  }
+  
+  .create-account a {
+    color: #0066cc;
+    text-decoration: none;
+  }
+  
+  .create-account a:hover {
+    text-decoration: underline;
+  }
+  
+  .social-login {
+    margin-top: 20px;
+  }
+  
+  .social-login a {
+    margin: 0 10px;
+  }
+  
+  .social-login img {
+    width: 40px;
+    height: 40px;
+  }
+  

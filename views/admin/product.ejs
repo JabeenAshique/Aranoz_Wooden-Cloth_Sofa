@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    
+    <style>
+      .navbar.bg-light {
+        background-color: #569c79 !important;
+      }
+      .offcanvas.bg-light {
+        background-color: #569c79 !important;
+      }
+      .navbar-light .navbar-nav .nav-link {
+        color: #ffffff !important;
+      }
+      .offcanvas .navbar-nav .nav-link {
+        color: #ffffff !important;
+      }
+      main {
+        margin-top: 56px; /* Adjust this based on your navbar height */
+        height: calc(100vh - 56px); /* Full height minus navbar */
+        overflow: auto;
+        margin-left: 270px; /* Adjust this based on your sidebar width */
+      }
+      .sidebar-nav {
+        width: 270px; /* Adjust this based on your sidebar width */
+        height: calc(100vh - 56px);
+        top: 56px;
+        overflow-y: auto;
+        position: fixed;
+        left: 0;
+      }
+      .navbar-brand {
+        color: white !important;
+      }
+      .content {
+        padding: 20px; /* Add some padding for better spacing */
+      }
+      .container-fluid {
+        padding: 0 20px; /* Adjust padding to reduce space */
+      }
+      .toast-success {
+    background-color: #28a745; /* Green background for success */
+    color: white;
+}
+.toast-error {
+    background-color: #dc3545; /* Red background for error */
+    color: white;
+}
+    </style>
+  </head>
+  <body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="offcanvasExample">
+        <span class="navbar-toggler-icon" data-bs-target="#sidebar"></span>
+      </button>
+      <a class="navbar-brand me-auto ms-lg-0 ms-3 text-uppercase fw-bold" href="#">Online Book Store</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavBar" aria-controls="topNavBar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- <div class="collapse navbar-collapse" id="topNavBar">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link ms-2" href="/dashboard" role="button" aria-expanded="false">
+              <i class="bi bi-person-fill"> Logout</i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div> -->
+  </nav>
+  
+  <div class="offcanvas offcanvas-start sidebar-nav bg-light" tabindex="-1" id="sidebar">
+    <div class="offcanvas-body p-0">
+      <nav class="navbar-light">
+        <ul class="navbar-nav">
+          <li>
+            <a href="#" class="nav-link px-3 active">
+              <span class="me-2"><i class="bi bi-speedometer2"></i></span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
+          <li>
+            <a href="/admin/category" class="nav-link px-3">
+              <span class="me-2"><i class="bi bi-book-fill"></i></span>
+              <span>Category</span>
+            </a>
+          </li>
+          <li>
+            <a href="/admin/product" class="nav-link px-3">
+              <span class="me-2"><i class="bi bi-book-fill"></i></span>
+              <span>Product</span>
+            </a>
+          </li>
+          <li>
+            <a href="/admin/customers" class="nav-link px-3">
+              <span class="me-2"><i class="bi bi-book-fill"></i></span>
+              <span>User</span>
+            </a>
+          </li>
+          <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+  
+  <main class="mt-5 pt-3">
+    <div class="container-fluid content">    
+      <div class="row">
+        <div class="col-md-12">
+                    <h2>Product Management</h2>
+                    <a href="/admin/product/add" class="btn btn-primary mb-3">Add Product</a>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Product Image</th>
+                                <th>Product Name</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Regular Price</th>
+                                <th>Sales</th>
+                                <th>Offer</th>
+                                <th>Quantity</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% products.forEach(product => { %>
+                                <tr>
+                                    <td>
+                                        <% if (product.productImage && product.productImage.length > 0) { %>
+                                            <img src="<%= product.productImage[0] %>" alt="Product Image" style="width: 100px; height: auto;">
+                                        <% } else { %>
+                                            No Image
+                                        <% } %>
+                                    </td>
+                                    <td><%= product.productName %></td>
+                                    <td><%= product.description %></td>
+                                    <td><%= product.category.name %></td>
+                                    <td><%= product.regularPrice %></td>
+                                    <td><%= product.salePrice %></td>
+                                    <td><%= product.productOffer %></td>
+                                    <td><%= product.quantity %></td>
+                                    <td>
+                                        <a href="/admin/product/edit/<%= product._id %>" class="btn btn-warning">Edit</a>
+                                        <form action="/admin/product/toggle/<%= product._id %>" method="POST" style="display: inline;">
+                                            <button type="submit" class="btn <%= product.isBlocked ? 'btn-success' : 'btn-danger' %>">
+                                                <%= product.isBlocked ? 'Unblock' : 'Block' %>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                            <!-- <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                              <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                                <div class="toast-header">
+                                  <strong class="me-auto">Notification</strong>
+                                  <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                                <div id="toast-body" class="toast-body"></div>
+                              </div>
+                            </div>
+                        </tbody>
+                    </table>
+                </div> -->
+                <div class="toast-container position-fixed p-3 bottom-0" style="top: 600px; right: 0; z-index: 1055;">
+                  <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                      <div class="toast-body" id="toast-body">
+                          <!-- Message will be injected here -->
+                      </div>
+                  </div>
+                </div>
+            </div>
+            
+</div>
+</div>
+</div>
+</main>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const successMessage = urlParams.get('success');
+        const errorMessage = urlParams.get('error');
+        
+        if (successMessage) {
+          document.getElementById('toast-body').textContent = successMessage;
+          document.getElementById('liveToast').classList.add('toast-success');
+          const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+          toast.show();
+        } else if (errorMessage) {
+          document.getElementById('toast-body').textContent = errorMessage;
+          document.getElementById('liveToast').classList.add('toast-error');
+          const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+          toast.show();
+        }
+      });
+    </script>
+    
+</body>
+</html>

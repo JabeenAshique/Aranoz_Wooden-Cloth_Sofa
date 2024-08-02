@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/CSS/style.css">
+  <link rel="stylesheet" href="/CSS/adminLogin.css">
+  
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-overlay"></div>
+    <div class="login-form">
+      <form action="/admin/login" method="POST">
+        <div class="form-group">
+          <input type="email" class="form-control" name="email" placeholder="Enter your email or phone number">
+        </div>
+        <div class="form-group">
+          <input type="password" class="form-control" name="password"placeholder="Password">
+          
+        </div>
+        <button type="submit" class="btn btn-success btn-block">Login</button>
+      </form>
+      <% if (message) { %>
+        <p><%= message %></p>
+    <% } %>
+      
+     
+  
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        .navbar.bg-light {
+            background-color: #569c79 !important;
+        }
+        .offcanvas.bg-light {
+            background-color: #569c79 !important;
+        }
+        .navbar-light .navbar-nav .nav-link {
+            color: #ffffff !important;
+        }
+        .offcanvas .navbar-nav .nav-link {
+            color: #ffffff !important;
+        }
+        main {
+            margin-top: 56px; /* Adjust this based on your navbar height */
+            height: calc(100vh - 56px); /* Full height minus navbar */
+            overflow: auto;
+            margin-left: 270px; /* Adjust this based on your sidebar width */
+        }
+        .sidebar-nav {
+            width: 270px; /* Adjust this based on your sidebar width */
+            height: calc(100vh - 56px);
+            top: 56px;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+        }
+        .navbar-brand {
+            color: white !important;
+        }
+        .content {
+            padding: 20px; /* Add some padding for better spacing */
+        }
+        .container-fluid {
+            padding: 0 20px; /* Adjust padding to reduce space */
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="offcanvasExample">
+                <span class="navbar-toggler-icon" data-bs-target="#sidebar"></span>
+            </button>
+            <a class="navbar-brand me-auto ms-lg-0 ms-3 text-uppercase fw-bold" href="#">Online Book Store</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavBar" aria-controls="topNavBar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </nav>
+  
+    <div class="offcanvas offcanvas-start sidebar-nav bg-light" tabindex="-1" id="sidebar">
+        <div class="offcanvas-body p-0">
+            <nav class="navbar-light">
+                <ul class="navbar-nav">
+                    <li>
+                        <a href="#" class="nav-link px-3 active">
+                            <span class="me-2"><i class="bi bi-speedometer2"></i></span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
+                    <li>
+                        <a href="/admin/category" class="nav-link px-3">
+                            <span class="me-2"><i class="bi bi-book-fill"></i></span>
+                            <span>Category</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/product" class="nav-link px-3">
+                            <span class="me-2"><i class="bi bi-book-fill"></i></span>
+                            <span>Product</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/customers" class="nav-link px-3">
+                            <span class="me-2"><i class="bi bi-book-fill"></i></span>
+                            <span>User</span>
+                        </a>
+                    </li>
+                    <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+  
+    <main class="mt-5 pt-3">
+        <div class="container-fluid content">    
+            <div class="row">
+                <div class="col-md-12">
+                    <h2>Category Management</h2>
+                    <!-- Add/Edit Category Form -->
+                    <form id="category-form" action="<%= editCategory ? '/admin/category/edit/' + editCategory._id : '/admin/category/add' %>" method="POST">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Category Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="<%= editCategory ? editCategory.name : '' %>" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="description" name="description" value="<%= editCategory ? editCategory.description : '' %>" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="categoryOffer" class="form-label">Offer</label>
+                            <input type="number" class="form-control" id="categoryOffer" name="categoryOffer" value="<%= editCategory ? editCategory.categoryOffer : '' %>" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><%= editCategory ? 'Update Category' : 'Add Category' %></button>
+                    </form>
+
+                    <!-- Categories List -->
+                    <h3 class="mt-5">Categories</h3>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Offer</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% categories.forEach(category => { %>
+                                <tr>
+                                    <td><%= category.name %></td>
+                                    <td><%= category.description %></td>
+                                    <td><%= category.categoryOffer %></td>
+                                    <td>
+                                        <a href="/admin/category/edit/<%= category._id %>" class="btn btn-warning">Edit</a>
+                                        <form class="toggle-category-form" action="/admin/category/toggle/<%= category._id %>" method="POST" style="display:inline;">
+                                            <button type="submit" class="btn btn-<%= category.isListed ? 'danger' : 'success' %>">
+                                                <%= category.isListed ? 'Unlist' : 'List' %>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+   
+    <script>
+        function showAlert(message) {
+            alert(message);
+        }
+
+        $(document).ready(function() {
+            $('.toggle-category-form').on('submit', function(event) {
+                event.preventDefault();
+                const form = $(this);
+                $.ajax({
+                    type: 'POST',
+                    url: form.attr('action'),
+                    success: function(response) {
+                        showAlert('Category status updated successfully');
+                        location.reload();
+                    },
+                    error: function(error) {
+                        showAlert('Failed to update category status');
+                    }
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOMContentLoaded event triggered");
+            const urlParams = new URLSearchParams(window.location.search);
+            console.log("URL parameters:", urlParams.toString());
+            const successMessage = urlParams.get('success');
+            const errorMessage = urlParams.get('error');
+            
+            if (successMessage) {
+                console.log("Success message:", successMessage);
+                showAlert(successMessage);
+            } else if (errorMessage) {
+                console.log("Error message:", errorMessage);
+                showAlert(errorMessage);
+            }
+        });
+    </script>
+</body>
+</html>

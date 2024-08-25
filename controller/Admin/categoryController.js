@@ -3,8 +3,21 @@
 // Get the category management page
 exports.getCategoryPage = async (req, res) => {
     try {
-        const categories = await Category.find();
-        res.render("category", { categories, editCategory: null });
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10; // Number of categories per page
+
+        const options = {
+            page,
+            limit,
+            sort: { name: 1 } // Sort by name in ascending order
+        };
+        const categories = await Category.find().skip((page - 1) * limit)
+        .limit(limit)
+        .exec();;
+        const count = await Category.countDocuments();
+        const totalPages = Math.ceil(count / limit);
+        res.render("category", { categories, editCategory: null, currentPage:page, 
+            totalPages  });
     } catch (error) {
         console.error("Error fetching categories:", error);
         res.redirect("/admin/dashboard");
@@ -15,6 +28,7 @@ exports.getCategoryPage = async (req, res) => {
 // Fetch a category for editing
 exports.getEditCategory = async (req, res) => {
     try {
+     
         const { id } = req.params;
         const categories = await Category.find();
         const editCategory = await Category.findById(id);
@@ -29,6 +43,10 @@ exports.getEditCategory = async (req, res) => {
 exports.addCategory = async (req, res) => {
     try {
         const { name, description, categoryOffer } = req.body;
+        //validation
+        if (/^[_\s]/.test(name) || parseFloat(categoryOffer) < 0) {
+            return res.redirect('/admin/category?error=Invalid input values');
+        }
         const existingCategory = await Category.findOne({ name });
         if (existingCategory) {
             return res.redirect('/admin/category?error=Category already exists');
@@ -47,6 +65,11 @@ exports.editCategory = async (req, res) => {
     try {
         const { id } = req.params;
         const { name, description, categoryOffer } = req.body;
+          // Validate inputs
+          if (/^[_\s]/.test(name) || parseFloat(categoryOffer) < 0) {
+            return res.redirect('/admin/category?error=Invalid input values');
+        }
+        
         const existingCategory = await Category.findOne({ name, _id: { $ne: id } });
         if (existingCategory) {
             return res.redirect('/admin/category?error=Category already exists');

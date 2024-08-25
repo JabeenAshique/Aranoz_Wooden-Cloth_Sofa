@@ -2,6 +2,7 @@
 const User = require('../../models/userSchema');
 const Address = require('../../models/addressSchema');
 const mongoose = require('mongoose');
+const Offer= require('../../models/offerSchema')
 const bcrypt = require('bcrypt');
 
 
@@ -13,46 +14,7 @@ const bcrypt = require('bcrypt');
 // };
 
 const loadProfilePage = async (req, res) => {
-    console.log("haiii")
-    // try {
-        
-    //     res.render('profile',);
-    // } catch (error) {
-    //     console.error('Error fetching user details:', error);
-    //     res.status(500).send('Server Error');
-    // }
-    // try    
-    // try {
-    //     console.log('Session Data:', req.session); // Log session data
-
-    //     if (!req.session.user || !req.session.user._id) {
-    //         return res.status(401).send('Unauthorized: User not logged in');
-    //     }
-
-    //     const userId = req.session.user._id;
-    //     console.log('User ID from session:', userId); // Log user ID
-
-    //     if (!mongoose.Types.ObjectId.isValid(userId)) {
-    //         return res.status(400).send('Invalid User ID');
-    //     }
-
-    //     const user = await User.findById(userId);
-
-    //     if (!user) {
-    //         return res.status(404).send('User not found');
-    //     }
-
-    //     // Fetch the addresses for the user
-    //     const addresses = await Address.find({ userId });
-        
-    //     console.log('User found:', user); // Log user data
-    //     console.log('Addresses found:', addresses); // Log address data
-    //     res.render('profile', { user, addresses });
-    // } catch (error) {
-    //     console.error('Error fetching user details:', error);
-    //     res.status(500).send('Server Error');
-    // }
-    console.log("haiii")
+   
     console.log('Session Data:', req.session); // Log session data
     console.log('User Data:', req.user); // Log user data
 
@@ -62,6 +24,9 @@ const loadProfilePage = async (req, res) => {
         }
 
         const userId = req.user._id;
+        const currentDate = new Date();
+        console.log(currentDate)
+
         console.log('User ID:', userId); // Log user ID
 
         if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -77,9 +42,21 @@ const loadProfilePage = async (req, res) => {
         // Fetch the addresses for the user
         const addresses = await Address.find({ userId });
         
+         // Check for active referral offers in the Offer schema
+        const activeReferralOffer = await Offer.findOne({
+            offerType: 'referral',
+            startDate: { $lte: currentDate },
+            endDate: { $gte: currentDate }
+        });
+
+        // Determine if the referral code should be shown
+        const showReferralCode = activeReferralOffer && user.referralCode;
+
         console.log('User found:', user); // Log user data
         console.log('Addresses found:', addresses); // Log address data
-        res.render('profile', { user, addresses });
+        console.log('Show Referral Code:', showReferralCode); // Log the decision on showing the referral code
+
+        res.render('profile', { user, addresses, showReferralCode });
     } catch (error) {
         console.error('Error fetching user details:', error);
         res.status(500).send('Server Error');
@@ -92,7 +69,7 @@ const loadProfilePage = async (req, res) => {
 
 const loadUpdateProfilePage=async(req,res)=>{
     try{
-        const userId = req.session.user._id;
+        const userId = req.user._id;
         const user = await User.findById(userId);
         // Fetch the addresses for the user
         const addresses = await Address.find({ userId });

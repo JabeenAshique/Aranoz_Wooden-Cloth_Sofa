@@ -1,23 +1,4 @@
-// const express = require('express');
-// const router = express.Router();
-// const passport = require('passport');
 
-// // Google OAuth login route
-// router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-
-
-// // Google OAuth callback route
-// router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/login' }), (req, res) => {
-//     req.session.user = req.user; // Ensure session is set
-//     res.redirect('/home1');
-// });
-
-// module.exports = router;
-
-
-// router/auth.js
-// router/auth.js
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');

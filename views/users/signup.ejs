@@ -25,7 +25,11 @@
     <!-- style CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
-
+<style>
+    .error-message{
+        color:red;
+    }
+</style>
 <body>
        <!--::header part start::-->
        <header class="main_menu home_menu">
@@ -138,10 +142,15 @@
                                         <input type="password" class="form-control" id="confirm-password" name="cPassword"  />
                                         <div id="error5" class="error-message"></div>
                                     </div>
-                                     
+                                    <div class="form-group">
+                                        <label for="referralCode">Referral Code (Optional)</label>
+                                        <input type="text" class="form-control" id="referralCode" name="referralCode" placeholder="Enter referral code if you have one" />
+                                    </div>
+    
                                     <button type="submit" value="submit" class="btn_3">
                                        sign up
                                     </button>
+                                   
                                     <button  class="btn_3">
                                         <a href="/auth/google" class="btn btn-outline-danger">
                                           </a>
@@ -244,7 +253,7 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 
         function nameValidateChecking(e) {
             const nameval = nameid.value;
-            const namepattern = /^[A-Za-z\s]+$/;
+            const namepattern = /^[A-Za-z][A-Za-z\s]*$/;
 
             if (nameval.trim() === "") {
                 error1.style.display = "block";
@@ -277,7 +286,7 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
             if (phoneval.trim() === "") {
                 error3.style.display = "block";
                 error3.innerHTML = "Enter valid phone number";
-            } else if (phoneval.length < 10 || phoneval.length > 10) {
+            } else if (phoneval.length < 10 || phoneval.length > 10 || /^0{10}$/.test(phoneval)) {
                 error3.style.display = "block";
                 error3.innerHTML = "Enter 10 digit";
             } else {

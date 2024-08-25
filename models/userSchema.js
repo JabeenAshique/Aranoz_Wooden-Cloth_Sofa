@@ -51,6 +51,10 @@ const userSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  walletBalance: {
+    type: Number,
+    default: 0,
+  },
   referralCode: {
     type: String,
     // required : true
@@ -87,8 +91,14 @@ cart: [
       quantity: { type: Number, required: true, default: 1 }
        }
     ],
-profileImage: { type: String } // Add this field
-});
+
+profileImage: { type: String },
+ // Add this field
+},{
+  timestamps:true
+},
+
+);
 
 
 const User = mongoose.model("User", userSchema);

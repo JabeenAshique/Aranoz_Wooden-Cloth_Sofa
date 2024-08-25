@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order History</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/all.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+  <style>
+    .order-details {
+      margin-top: 20px;
+    }
+    .order-item img {
+      width: 100px;
+      height: auto;
+      margin-right: 10px;
+    }
+    .order-address {
+      margin-top: 20px;
+    }
+    .order-actions {
+      margin-top: 20px;
+    }
+    .cancel-button {
+      background-color: red;
+      color: white;
+    }
+    .return-button{
+      background-color: red;
+      color: rgb(255, 255, 255);
+    }
+    .status-cancelled {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+</head>
+</head>
+<body>
+  <%- include('header') %>
+    <!-- Header part end-->
+    <section class="contact-section padding_top">
+  <div class="container order-details">
+   
+    <div class="row">
+      <div class="col-lg-12">
+        <!-- Loop through the orders array -->
+       
+          <div class="card mb-4">
+            <div class="card-header">
+              Order ID: <%= order.orderId %> | Status: <span class="<%= order.status === 'Cancelled' ? 'status-cancelled' : '' %>"><%= order.status %></span>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8">
+                  <h5>Items</h5>
+                  <ul class="list-unstyled">
+                    <% order.orderedItems.forEach(item => { %>
+                      <li class="media order-item">
+                        <img src="<%= item.product.productImage[0] %>" class="mr-3" alt="<%= item.product.productName %>">
+                        <div class="media-body">
+                          <h5 class="mt-0 mb-1"><%= item.product.productName %></h5>
+                          Quantity: <%= item.quantity %> | Price: $<%= item.price %>
+                        </div>
+                      </li>
+                    <% }) %>
+                  </ul>
+                  <p>Total Price: $<%= order.totalPrice %></p>
+                </div>
+                <div class="col-md-4 order-address">
+                  <h5>Shipping Address</h5>
+                  <p><strong>Name:</strong> <%= order.address.name %></p>
+                  <p><strong>Type:</strong> <%= order.address.addressType %></p>
+                  <p><strong>Landmark:</strong> <%= order.address.landMark %></p>
+                  <p><strong>City:</strong> <%= order.address.city %>, <strong>State:</strong> <%= order.address.state %></p>
+                </div>
+              </div>
+              <div class="order-actions">
+                <% if (order.status === 'Pending') { %>
+                    <button class="btn cancel-button" onclick="confirmCancel('<%= order.orderId %>')">Cancel Order</button>
+                <% } else if (order.status === 'Delivered') { %>
+                    
+                        <button class="btn return-button" onclick="confirmReturn('<%= order.orderId %>')">Return Order</button>
+                    
+                <% } %>
+            </div>
+            
+            </div>
+          </div>
+       
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/jquery-3.5.1.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script>
+  function confirmCancel(orderId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you really want to cancel this order?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, cancel it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Make a POST request to cancel the order
+            fetch(`/cancel/${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success');
+                    // Redirect or refresh the page
+                    location.reload();
+                } else {
+                    Swal.fire('Error!', 'Failed to cancel the order.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error!', 'An error occurred. Please try again.', 'error');
+            });
+        }
+    });
+}
+
+function confirmReturn(orderId) {
+   
+
+  
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you really want to return this order?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, return it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Make a POST request to return the order
+            fetch(`/return/${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Returned!', 'Your order has been returned.', 'success');
+                    // Redirect or refresh the page
+                    location.reload();
+                } else {
+                    Swal.fire('Error!', 'Failed to return the order.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error!', 'An error occurred. Please try again.', 'error');
+            });
+        }
+    });
+}
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</body>
+</html>

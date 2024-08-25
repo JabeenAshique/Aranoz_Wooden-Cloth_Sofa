@@ -22,16 +22,15 @@ const ensureAuthenticated = (req, res, next) => {
     } else {
         res.status(401).send('Unauthorized: User not logged in');
     }
-    // if (req.session.user && req.session.user._id) {
-    //     if (!req.user) {
-    //         req.user = req.session.user; // Populate req.user from session
-    //     }
-    //     return next();
-    // }
-    // res.status(401).send('Unauthorized: User not logged in');
+  
 };
-
-module.exports = {authMiddleware,ensureAuthenticated};
+const isAdmin=(req,res,next)=>{
+    if(req.session.admin){
+        return next()
+    }
+    return res.redirect('/admin/login')
+}
+module.exports = {authMiddleware,ensureAuthenticated,isAdmin};
 
 
 

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+        }
+        .wishlist-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+        }
+        .wishlist-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .wishlist-header h1 {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+        .wishlist-header .breadcrumb {
+            background: none;
+            padding: 0;
+            margin: 0;
+        }
+        .wishlist-header .breadcrumb-item + .breadcrumb-item::before {
+            content: ">";
+        }
+        .wishlist-header .breadcrumb-item a {
+            color: #6c757d;
+            text-decoration: none;
+        }
+        .wishlist-header .breadcrumb-item.active {
+            color: #333;
+        }
+        .wishlist-table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .wishlist-table th,
+        .wishlist-table td {
+            padding: 15px;
+            text-align: left;
+        }
+        .wishlist-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        .wishlist-table td {
+            vertical-align: middle;
+        }
+        .wishlist-table img {
+            max-width: 80px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        .wishlist-table .product-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .wishlist-table .product-name {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            margin: 0;
+        }
+     
+        .wishlist-table .stock-status {
+            color: #28a745;
+            font-weight: 500;
+        }
+        .wishlist-table .add-to-cart-btn {
+            background-color: #28a745;
+            color: #fff;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .wishlist-table .add-to-cart-btn:hover {
+            background-color: #218838;
+        }
+        .wishlist-table .remove-btn {
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .wishlist-table .remove-btn:hover {
+            color: #c82333;
+        }
+        .stock-status.in-stock {
+    color: #28a745; /* Green color for "In Stock" */
+    font-weight: 500;
+}
+
+.stock-status.out-of-stock {
+    color: #dc3545; /* Red color for "Out of Stock" */
+    font-weight: 500;
+}
+    </style>
+</head>
+<body>
+    <%- include('header') %>
+<section class="cat_product_area  padding_top">
+    <div class="wishlist-container">
+        <div class="wishlist-header">
+            <h1><i class="fas fa-heart"></i> My Wishlist</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Wishlist</li>
+                </ol>
+            </nav>
+        </div>
+    
+        <table class="wishlist-table">
+            <thead>
+            <tr>
+                <th scope="col">Product name</th>
+                <th scope="col">Unit price</th>
+                <th scope="col">Stock status</th>
+                <th scope="col">Added on</th>
+                <th scope="col">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+                <% wishlistItems.forEach(item => { %>
+                <tr>
+                    <td>
+                        <div class="product-info" onclick="redirectToProduct('<%= item.productId._id %>')">
+                            <img src="<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
+                            <p class="product-name"><%= item.productId.productName %></p>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="unit-price">₹<%= item.productId.salePrice %></span>
+                    </td>
+                    <td>
+                        <p class="stock-status <%= item.productId.quantity > 0 ? 'in-stock' : 'out-of-stock' %>">
+                            <%= item.productId.quantity > 0 ? 'In Stock' : 'Out of Stock' %>
+                        </p>
+                    </td>
+                    <td>
+                        <p><%= new Date(item.addedOn).toLocaleDateString() %></p>
+                    </td>
+                    <td>
+                        <i class="fas fa-trash-alt remove-btn" data-product-id="<%= item.productId._id %>" onclick="removeFromWishlist('<%= item.productId._id %>', this)"></i>
+                    </td>
+                </tr>
+                <% }); %>
+                </tbody>
+        </table>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function redirectToProduct(productId) {
+        window.location.href = `/product/${productId}`;
+    }
+
+    function removeFromWishlist(productId, element) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to remove this product from your wishlist?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/wishlist/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Removed!',
+                            text: 'Product has been removed from your wishlist.',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        // Remove the product row from the table
+                        const row = element.closest('tr');
+                        row.parentNode.removeChild(row);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Failed to remove product from wishlist',
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An unexpected error occurred. Please try again later.',
+                    });
+                });
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

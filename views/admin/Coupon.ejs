@@ -1,0 +1,410 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | Coupon Management</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <style>
+    .navbar.bg-light {
+      background-color: #569c79 !important;
+    }
+    .offcanvas.bg-light {
+      background-color: #569c79 !important;
+    }
+    .navbar-light .navbar-nav .nav-link {
+      color: #ffffff !important;
+    }
+    .offcanvas .navbar-nav .nav-link {
+      color: #ffffff !important;
+    }
+    main {
+      margin-top: 56px; /* Adjust this based on your navbar height */
+      height: calc(100vh - 56px); /* Full height minus navbar */
+      overflow: auto;
+      margin-left: 270px; /* Adjust this based on your sidebar width */
+    }
+    .sidebar-nav {
+      width: 270px; /* Adjust this based on your sidebar width */
+      height: calc(100vh - 56px);
+      top: 56px;
+      overflow-y: auto;
+      position: fixed;
+      left: 0;
+    }
+    .navbar-brand {
+      color: white !important;
+    }
+    .content {
+      padding: 20px; /* Add some padding for better spacing */
+    }
+    .container-fluid {
+      padding: 0 20px; /* Adjust padding to reduce space */
+    }
+    .edit-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 5px;
+}
+
+.remove-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+.edit-button:hover {
+    background-color: #45a049;
+}
+
+.remove-button:hover {
+    background-color: #e53935;
+}
+.pagination .page-item.active .page-link {
+    background-color: #569c79 !important;
+    border-color: #569c79 !important;
+    color: white;
+}
+
+.pagination .page-link {
+    color: #569c79;
+}
+
+.pagination .page-link:hover {
+    background-color: #45a049;
+    border-color: #45a049;
+    color: white;
+}
+   
+
+  </style>
+</head>
+<body>
+    <%- include('sidebar') %>
+<main class="mt-5 pt-3">
+  <div class="container-fluid content">    
+    <div class="row">
+      <div class="col-md-12">
+        <h4>Coupon Management</h4>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12 d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                       
+                    </div>
+                </div>
+            </div>
+            <hr>
+                <div class="col-auto">
+                  <button class="btn btn-success"data-toggle="modal" data-target="#createCouponModal">Create Coupons</button>
+                  <input type="text" id="search-input" class="form-control d-inline" style="width: 200px;" placeholder="Search by name">
+                </div>
+            </div>
+<!-- Start Modal -->        
+<div class="modal fade" id="createCouponModal" tabindex="-1" role="dialog" aria-labelledby="createCouponModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createCouponModalLabel">Create New Coupon</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createCouponForm">
+                    <div class="form-group">
+                        <label for="couponName">Coupon Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expireOn">Expire On</label>
+                        <input type="date" class="form-control" id="expireOn" name="expireOn" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="offerPrice">Offer Price</label>
+                        <input type="number" class="form-control" id="offerPrice" name="offerPrice" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="minimumPrice">Minimum Price</label>
+                        <input type="number" class="form-control" id="minimumPrice" name="minimumPrice" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="createCoupon()">Save Coupon</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Modal -->
+
+<!-- Start Edit Modal -->
+<div class="modal fade" id="editCouponModal" tabindex="-1" role="dialog" aria-labelledby="editCouponModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="editCouponModalLabel">Edit Coupon</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+          </div>
+          <div class="modal-body">
+              <form id="editCouponForm">
+                  <div class="form-group">
+                      <label for="editCouponName">Coupon Name</label>
+                      <input type="text" class="form-control" id="editCouponName" name="name" required>
+                  </div>
+                  <div class="form-group">
+                      <label for="editExpireOn">Expire On</label>
+                      <input type="date" class="form-control" id="editExpireOn" name="expireOn" required>
+                  </div>
+                  <div class="form-group">
+                      <label for="editOfferPrice">Offer Price</label>
+                      <input type="number" class="form-control" id="editOfferPrice" name="offerPrice" required>
+                  </div>
+                  <div class="form-group">
+                      <label for="editMinimumPrice">Minimum Price</label>
+                      <input type="number" class="form-control" id="editMinimumPrice" name="minimumPrice" required>
+                  </div>
+                  <input type="hidden" id="editCouponId" name="id">
+              </form>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" onclick="saveEditedCoupon()">Save Changes</button>
+          </div>
+      </div>
+  </div>
+</div>
+<!-- End Edit Modal -->
+
+<div class="row mt-4">
+  <div class="col-12">
+      <table class="table table-bordered">
+          <thead class="thead-light">
+              <tr>
+                  <th>Name</th>
+                  <th>Status</th>
+                  <th>End Time</th>
+                  <th>Start Time</th>
+                  <th>Action</th>
+                  
+              </tr>
+          </thead>
+          <tbody>
+            <% if (coupons.length > 0) { %>
+                <% coupons.forEach(function(coupon) { %>
+                    <tr >
+                        <td><%= coupon.name %></td>
+                        <td><%= coupon.isList %></td>
+                        <td><%= new Date(coupon.expireOn).toLocaleDateString() %></td>
+                        <td><%= new Date(coupon.createdOn).toLocaleDateString() %></td>
+                        <td data-id="<%= coupon._id %>">
+                            <button class="edit-button" onclick="populateEditModal('<%= coupon._id %>')">Edit</button>
+                            <button class="remove-button" onclick="removeCoupon('<%= coupon._id %>')">Remove</button>
+                        </td>
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr>
+                    <td colspan="5">No coupons found.</td>
+                </tr>
+            <% } %>
+        </tbody>
+        
+      </table>
+  </div>
+</div>
+<!-- Pagination -->
+<div class="row">
+  <div class="col-12 d-flex justify-content-center">
+      <nav aria-label="Page navigation">
+          <ul class="pagination">
+              <% for(let i = 1; i <= totalPages; i++) { %>
+                  <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                      <a class="page-link" href="/admin/coupon?page=<%= i %>&search=<%= encodeURIComponent(searchQuery) %>"><%= i %></a>
+                  </li>
+              <% } %>
+          </ul>
+      </nav>
+  </div>
+</div>
+        
+      </div>
+    </div>
+  </div>
+</main>
+<!-- jQuery and Bootstrap JS -->
+<!-- <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script> -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+  document.getElementById('search-input').addEventListener('input', function() {
+    const searchQuery = this.value.trim();
+
+    // Redirect to the search route with the search query as a URL parameter
+    window.location.href = `/admin/coupon?search=${encodeURIComponent(searchQuery)}`;
+});
+
+    function createCoupon() {
+      alert('Button clicked!');
+      alert('Button clicked2!');
+
+    
+        const form = document.getElementById('createCouponForm');
+        const formData = new FormData(form);
+
+           // Log FormData contents
+    console.log("FormData entries:");
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+    }
+      // Convert FormData to a plain object
+    const couponData = {
+        name: formData.get('name'),
+        expireOn: formData.get('expireOn'),
+        offerPrice: formData.get('offerPrice'),
+        minimumPrice: formData.get('minimumPrice')
+    };
+
+    console.log("Coupon Data:", couponData);
+
+
+        fetch('/admin/coupon', {
+            method: 'POST',
+            body: JSON.stringify({
+                name: formData.get('name'),
+                expireOn: formData.get('expireOn'),
+                offerPrice: formData.get('offerPrice'),
+                minimumPrice: formData.get('minimumPrice')
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close the modal
+                $('#createCouponModal').modal('hide');
+                // Optionally reload the page or update the UI
+                location.reload();
+            } else {
+                alert('Error creating coupon: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function populateEditModal(couponId) {
+    // Fetch the coupon data from the server
+    fetch(`/admin/coupon/edit/${couponId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch coupon data');
+            }
+            return response.json();
+        })
+        .then(coupon => {
+            // Populate the form fields with the coupon data
+            document.getElementById('editCouponId').value = coupon._id; // or coupon.id
+            document.getElementById('editCouponName').value = coupon.name;
+            document.getElementById('editExpireOn').value = new Date(coupon.expireOn).toISOString().substring(0, 10); // formatting date
+            document.getElementById('editOfferPrice').value = coupon.offerPrice;
+            document.getElementById('editMinimumPrice').value = coupon.minimumPrice;
+
+            // Show the edit modal
+            $('#editCouponModal').modal('show');
+        })
+        .catch(error => {
+            console.error('Error fetching coupon data:', error);
+            alert('Failed to load coupon data for editing.');
+        });
+}
+function saveEditedCoupon(){
+  const form = document.getElementById("editCouponForm");
+  const formData= new FormData(form);
+
+   // Convert FormData to a plain object
+   const couponData = {
+        id: formData.get('id'),
+        name: formData.get('name'),
+        expireOn: formData.get('expireOn'),
+        offerPrice: formData.get('offerPrice'),
+        minimumPrice: formData.get('minimumPrice')
+    };
+    fetch(`/admin/coupon/edit/${couponData.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(couponData),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close the modal
+            $('#editCouponModal').modal('hide');
+            // Optionally reload the page or update the UI
+            location.reload();
+        } else {
+            alert('Error updating coupon: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+function removeCoupon(couponId) {
+    if (confirm("Are you sure you want to remove this coupon?")) {
+        console.log('Attempting to remove coupon with ID:', couponId); 
+        
+        fetch(`/admin/coupon/remove/${couponId}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            console.log('Server responded with:', response.status);
+            if (response.ok) {
+                return response.text(); // Ensure we get the server's response text
+            } else {
+                throw new Error('Failed to remove coupon.');
+            }
+        })
+        .then(text => {
+            console.log('Server response text:', text);
+            if (text === 'Coupon removed') {
+                console.log('Removing coupon row from DOM');
+                const couponRow = document.querySelector(`tr[data-id='${couponId}']`);
+                if (couponRow) {
+                  location.reload(); // Force a full page reload
+                }
+            } else {
+                alert('Coupon could not be removed.');
+            }
+        })
+        .catch(error => {
+            console.error('Error during coupon removal:', error);
+            alert("An error occurred while removing the coupon.");
+        });
+    }
+}
+
+
+</script>
+
+</body>
+</html>

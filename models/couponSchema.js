@@ -27,7 +27,7 @@ const couponSchema = new mongoose.Schema({
     },
     isList : {
         type : Boolean,
-        default: true
+        
     },
     userId : [{
         type : mongoose.Schema.Types.ObjectId,

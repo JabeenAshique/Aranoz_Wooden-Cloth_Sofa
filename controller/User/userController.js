@@ -1,7 +1,9 @@
 
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
-const Category=require("../../models/categorySchema")
+const Category=require("../../models/categorySchema");
+const Wishlist=require("../../models/wishlistSchema");
+const Offer= require ("../../models/offerSchema");
 const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
 const bcrypt = require('bcrypt');
@@ -39,11 +41,43 @@ const loadLoginpage = async (req, res) => {
 const getProductDetails = async (req, res) => {
     try {
         const productId = req.params.id;
+        const currentDate = new Date();
         const product = await Product.findById(productId).populate("category");
         if (!product) {
             return res.status(404).send("Product not found");
         }
+         // Fetch offers that apply to the product's category or the product itself and are active on the current date
+         const applicableOffers = await Offer.find({
+            $or: [
+                { category: product.category._id },
+                { product: product._id }
+            ],
+            startDate: { $lte: currentDate },
+            endDate: { $gte: currentDate }
+        });
+        console.log("Applicable Offers:", applicableOffers);
+        // Initialize variables to hold the maximum offer amounts
+        let maxCategoryOffer = 0;
+        let maxProductOffer = 0;
 
+        // Iterate over the applicable offers
+        applicableOffers.forEach(offer => {
+        if (offer.category && offer.category.toString() === product.category._id.toString()) {        
+        if (offer.offerAmount > maxCategoryOffer) {
+            maxCategoryOffer = offer.offerAmount;
+        }
+        } else if (offer.product && offer.product.toString() === product._id.toString()) {
+        // It's a product-specific offer
+        if (offer.offerAmount > maxProductOffer) {
+            maxProductOffer = offer.offerAmount;
+        }
+    }
+});
+console.log("Max Category Offer:", maxCategoryOffer);
+console.log("Max Product Offer:", maxProductOffer);
+
+      // Determine the greater offer
+        const finalOffer = Math.max(maxCategoryOffer, maxProductOffer);  
         const relatedProducts = await Product.find({ 
             category: product.category._id, 
             _id: { $ne: productId } 
@@ -51,7 +85,7 @@ const getProductDetails = async (req, res) => {
         if (product.isBlocked) {
             res.render("pro_details", { product: null, relatedProducts, message: "This product is unavailable." });
         } else {
-            res.render("pro_details", { product, relatedProducts, message: null });
+            res.render("pro_details", { product, relatedProducts, message: null,finalOffer });
         }
         // res.render("pro_details", { product, relatedProducts });
     } catch (error) {
@@ -113,122 +147,119 @@ const logout = (req, res) => {
     });
 };
 
-// const loadShopPage = async (req, res) => {
-//     try {
-//         const filterOutOfStock = req.query.filterOutOfStock === 'true';
-//         const categories = await Category.find({ isListed: true });
-//         const categoryFilter = req.query.category;
-//         let products;
-        
-//         if (filterOutOfStock) {
-//             products = await Product.find({ quantity: { $gt: 0 } });
-//           } else {
-//             products = await Product.find({});
-//           }
-//         if (categoryFilter) {
-//             products = await Product.find({ category: categoryFilter, isBlocked: false })
-//                                     .populate({
-//                                         path: 'category',
-//                                         match: { isListed: true }
-//                                     }).exec();
-//         } else {
-//             products = await Product.find({ isBlocked: false })
-//                                     .populate({
-//                                         path: 'category',
-//                                         match: { isListed: true }
-//                                     }).exec();
-//         }
 
-//         // Filter out products with unlisted categories
-//         products = products.filter(product => product.category);
-
-//         console.log('Categories:', categories); // Debugging log
-//         console.log('Products:', products); // Debugging log
-
-//         return res.render("shop", { products, categories, categoryFilter });
-//     } catch (error) {
-//         console.log("shop page is not loading", error);
-//         res.status(500).send("server error");
-//     }
-// }
 const loadShopPage = async (req, res) => {
     try {
-      const filterOutOfStock = req.query.filterOutOfStock === 'true';
-      const categoryFilter = req.query.category;
-      const sort = req.query.sort;
-  
-      let sortOption = {};
-  
-      switch (sort) {
-        // case 'popularity':
-        //   sortOption = { popularity: -1 }; // Assuming you have a 'popularity' field
-        //   break;
-        case 'priceAsc':
-          sortOption = { salePrice: 1 };
-          break;
-        case 'priceDesc':
-          sortOption = { salePrice: -1 };
-          break;
-        // case 'averageRatings':
-        //   sortOption = { ratings: -1 }; // Assuming you have a 'ratings' field
-        //   break;
-        // case 'featured':
-        //   sortOption = { featured: -1 }; // Assuming you have a 'featured' field
-        //   break;
-        // case 'newArrivals':
-        //   sortOption = { createdOn: -1 }; // Assuming you have a 'createdOn' field
-        //   break;
-        case 'az':
-          sortOption = { productName: 1 };
-          break;
-        case 'za':
-          sortOption = { productName: -1 };
-          break;
-        default:
-          sortOption = {}; // No sorting
-      }
-  
-      let query = { isBlocked: false };
-  
-      if (filterOutOfStock) {
-        query.quantity = { $gt: 0 };
-      }
-  
-      if (categoryFilter) {
-        query.category = categoryFilter;
-      }
-  
-      const categories = await Category.find({ isListed: true });
-      let products = await Product.find(query)
-        .populate({
-          path: 'category',
-          match: { isListed: true }
-        })
-        .sort(sortOption)
-        .exec();
-  
-      // Filter out products with unlisted categories
-      products = products.filter(product => product.category);
-  
-      console.log('Categories:', categories); // Debugging log
-      console.log('Products:', products); // Debugging log
-  
-      return res.render("shop", { products, categories, categoryFilter });
-    } catch (error) {
-      console.log("shop page is not loading", error);
-      res.status(500).send("server error");
-    }
-  };
+        const page = parseInt(req.query.page) || 1;
+        const limit = 9; // Adjust the limit as per  requirement
+        const sortOption = req.query.sort || 'default';
+        const searchQuery = req.query.search || ''; // Get the search query
+        const minPrice = parseInt(req.query.minPrice) || 0; // Get the minimum price, default is 0
+        const maxPrice = parseInt(req.query.maxPrice) || 1000000; // Get the maximum price, default is 10 lakh (1,000,000)
+        let sortCriteria = {};
 
-const loadMainPage= async(req,res)=>{
-    try {
-        const products = await Product.find({ isBlocked: false }).exec(); // Ensure to fetch only non-blocked products
-        res.render('home1', { products });
+        // Define sorting criteria based on sortOption
+        switch (sortOption) {
+            case 'popularity':
+                sortCriteria = { popularity: -1 };
+                break;
+            case 'priceAsc':
+                sortCriteria = { salePrice: 1 };
+                break;
+            case 'priceDesc':
+                sortCriteria = { salePrice: -1 };
+                break;
+            case 'averageRatings':
+                sortCriteria = { averageRatings: -1 };
+                break;
+            case 'featured':
+                sortCriteria = { featured: -1 };
+                break;
+            case 'newArrivals':
+                sortCriteria = { createdAt: -1 };
+                break;
+            case 'az':
+                sortCriteria = { productName: 1 };
+                break;
+            case 'za':
+                sortCriteria = { productName: -1 };
+                break;
+            default:
+                sortCriteria = {};
+        }
+
+        const categoryFilter = req.query.category;
+        const categoryQuery = categoryFilter ? { category: categoryFilter } : {};
+         // Update the product query to include the search term
+         const productQuery = {
+            ...categoryQuery,
+            productName: { $regex: searchQuery, $options: 'i' }, // Case-insensitive search
+            salePrice: { $gte: minPrice, $lte: maxPrice } // Apply price range filter
+        };
+
+        const products = await Product.find(productQuery)
+            .sort(sortCriteria)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .exec();
+
+        const count = await Product.countDocuments(productQuery);
+        const totalPages = Math.ceil(count / limit);
+        const categories = await Category.find();
+         // Retrieve the user's wishlist
+         let wishlistItems = [];
+         if (req.user) {
+             const wishlist = await Wishlist.findOne({ userId: req.user._id }).populate('products.productId');
+             if (wishlist) {
+                 wishlistItems = wishlist.products.map(item => item.productId._id.toString());
+             }
+         }
+        res.render("shop", {
+            products,
+            categories,
+            currentPage: page,
+            totalPages,
+            categoryFilter,
+            sortOption,
+            searchQuery,
+            minPrice,
+            maxPrice,
+            wishlistItems
+        });
     } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error("Error fetching products:", error);
+        res.status(500).send("Server Error");
+    }
+};
+// const loadMainPage= async(req,res)=>{
+//     try {
+//         const products = await Product.find({ isBlocked: false }).exec(); 
+//         const categories= await Category.find({isListed:false}).limit(4).exec();;// Ensure to fetch only non-blocked products
+//         res.render('home1', { products,categories });
+//     } catch (error) {
+//         console.error('Error fetching products:', error);
+//         res.status(500).send('Server Error');
+//     }
+
+// }
+const loadMainPage = async (req, res) => {
+    try {
+        
+        const categories = await Category.find().limit(4).exec();
+        const products = await Product.find({ isBlocked: false }).exec(); 
+        const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
+            const product = await Product.findOne({ category: category._id, isBlocked: false }).exec();
+            return { category, product };
+        }));
+
+        // Render the page with the categories and their products
+        res.render('home1', { categoriesWithProducts,products });
+    } catch (error) {
+        console.error('Error fetching categories and products:', error);
         res.status(500).send('Server Error');
     }
-}
+};
+
 //otp
 
 
@@ -263,38 +294,130 @@ try {
 }
 }
 
-const signup= async(req,res)=>{
-    try {
-     const {name,email,phone, password, cPassword}=req.body
-     if(password!==cPassword){
-         return res.render("signup",{message:"Password do not match"})
-     }
+// const signup= async(req,res)=>{
+//     try {
+//      const {name,email,phone, password, cPassword,referralCode }=req.body
+//      if(password!==cPassword){
+//          return res.render("signup",{message:"Password do not match"})
+//      }
  
-     const findUser= await User.findOne({email})
-     if(findUser){
-         return res.render("signup",{message:"User with this email already exists"})
-     }
- 
-     const otp=generateOtp()
- 
- 
-     const emailSend= await sendVerificationEmail(email,otp)
-     if(!emailSend){
-         return res.json("email-error")
-     }
- 
-     req.session.userOtp=otp
-     req.session.userData={name,email,phone,password}
- 
-     res.render("verify-otp")
-     console.log("OTP sent",otp)
-    } catch (error) {
-     console.error("signup error",error)
-     res.render("/pageNotFound")
-    }
- }
- 
+//      const findUser= await User.findOne({email})
+//      if(findUser){
+//          return res.render("signup",{message:"User with this email already exists"})
+//      }
+//       // Generate a referral code based on the user's name
+//       const namePart = name.substring(0, 3).toUpperCase();
+//       const randomPart = Math.floor(100 + Math.random() * 900).toString(); // Generate a random 3-digit number
+//       const userReferralCode = `${namePart}${randomPart}`;
 
+//       let walletBalance = 0;
+
+//       // Check if the referral code provided is valid
+//       if (referralCode) {
+//           const referrer = await User.findOne({ referralCode });
+
+//           if (referrer) {
+//               // Add ₹100 to the referrer's wallet
+//               referrer.walletBalance += 100;
+//               await referrer.save();
+
+//               // Add ₹20 to the new user's wallet
+//               walletBalance += 20;
+//           } else {
+//               return res.render("signup", { message: "Invalid referral code" });
+//           }
+//       }
+//      const otp=generateOtp()
+
+//      const emailSend= await sendVerificationEmail(email,otp)
+//      if(!emailSend){
+//          return res.json("email-error")
+//      }
+ 
+//      req.session.userOtp=otp
+//      req.session.userData={name,email,phone,password}
+ 
+//      res.render("verify-otp")
+//      console.log("OTP sent",otp)
+//     } catch (error) {
+//      console.error("signup error",error)
+//      res.render("/pageNotFound")
+//     }
+//  }
+ 
+const signup = async (req, res) => {
+    try {
+        const { name, email, phone, password, cPassword, referralCode } = req.body;
+
+        // Check if passwords match
+        if (password !== cPassword) {
+            return res.render("signup", { message: "Passwords do not match" });
+        }
+
+        // Check if the user already exists
+        const findUser = await User.findOne({ email });
+        if (findUser) {
+            return res.render("signup", { message: "User with this email already exists" });
+        }
+
+        // Generate a referral code based on the user's name
+        const namePart = name.substring(0, 3).toUpperCase();
+        const randomPart = Math.floor(100 + Math.random() * 900).toString(); // Generate a random 3-digit number
+        const userReferralCode = `${namePart}${randomPart}`;
+
+        let walletBalance = 0;
+
+        // Check if the referral code provided is valid
+        if (referralCode) {
+            const referrer = await User.findOne({ referralCode });
+
+            if (referrer) {
+                // Fetch the referral offer from the Offer schema
+                const referralOffer = await Offer.findOne({ offerType: "referral", startDate: { $lte: new Date() }, endDate: { $gte: new Date() } });
+
+                if (referralOffer) {
+                    // Add the amount defined in the offer to the referrer's wallet
+                    referrer.walletBalance += referralOffer.referrerAmount || 100; // Default to ₹100 if not specified
+                    await referrer.save();
+
+                    // Add the amount defined in the offer to the new user's wallet
+                    walletBalance += referralOffer.referredAmount || 20; // Default to ₹20 if not specified
+                } else {
+                    return res.render("signup", { message: "No active referral offer available" });
+                }
+            } else {
+                return res.render("signup", { message: "Invalid referral code" });
+            }
+        }
+
+        // Generate OTP for email verification
+        const otp = generateOtp();
+
+        // Send verification email
+        const emailSend = await sendVerificationEmail(email, otp);
+        if (!emailSend) {
+            return res.json("email-error");
+        }
+
+        // Store OTP and user data in the session
+        req.session.userOtp = otp;
+        req.session.userData = {
+            name,
+            email,
+            phone,
+            password,
+            walletBalance, // Store the wallet balance to be added to the user during OTP verification
+            referralCode: userReferralCode // Store the generated referral code
+        };
+
+        // Render the OTP verification page
+        res.render("verify-otp");
+        console.log("OTP sent:", otp);
+    } catch (error) {
+        console.error("Signup error:", error);
+        res.status(500).render("pageNotFound");
+    }
+};
 const securePassword=async (password)=>{
     try {
         const passwordHash=await bcrypt.hash(password,10)
@@ -319,7 +442,9 @@ const verifyOtp = async (req, res) => {
                 name:user.name,
                 email:user.email,
                 phone:user.phone,
-                password:passwordHash
+                password:passwordHash,
+                walletBalance: user.walletBalance,
+                referralCode: user.referralCode
             })
 
 
@@ -381,5 +506,8 @@ module.exports = {
     loadLoginpage,
     loadHomepage,
     loadMainPage,
-    logout
+    logout,
+    generateOtp,
+    sendVerificationEmail,
+    securePassword
 };

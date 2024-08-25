@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="/css/dashboard.css">
     <style>
@@ -43,74 +44,38 @@
         .container-fluid {
             padding: 0 20px; /* Adjust padding to reduce space */
         }
+        .error-message{
+            color: red;
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-        <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="offcanvasExample">
-                <span class="navbar-toggler-icon" data-bs-target="#sidebar"></span>
-            </button>
-            <a class="navbar-brand me-auto ms-lg-0 ms-3 text-uppercase fw-bold" href="#">Online Book Store</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavBar" aria-controls="topNavBar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </div>
-    </nav>
-  
-    <div class="offcanvas offcanvas-start sidebar-nav bg-light" tabindex="-1" id="sidebar">
-        <div class="offcanvas-body p-0">
-            <nav class="navbar-light">
-                <ul class="navbar-nav">
-                    <li>
-                        <a href="#" class="nav-link px-3 active">
-                            <span class="me-2"><i class="bi bi-speedometer2"></i></span>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
-                    <li>
-                        <a href="/admin/category" class="nav-link px-3">
-                            <span class="me-2"><i class="bi bi-book-fill"></i></span>
-                            <span>Category</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/product" class="nav-link px-3">
-                            <span class="me-2"><i class="bi bi-book-fill"></i></span>
-                            <span>Product</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/customers" class="nav-link px-3">
-                            <span class="me-2"><i class="bi bi-book-fill"></i></span>
-                            <span>User</span>
-                        </a>
-                    </li>
-                    <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
-                </ul>
-            </nav>
-        </div>
-    </div>
-  
+    <%- include('sidebar') %>
+
     <main class="mt-5 pt-3">
         <div class="container-fluid content">    
             <div class="row">
                 <div class="col-md-12">
                     <h2>Category Management</h2>
                     <!-- Add/Edit Category Form -->
-                    <form id="category-form" action="<%= editCategory ? '/admin/category/edit/' + editCategory._id : '/admin/category/add' %>" method="POST">
+                    <form id="category-form" action="<%= editCategory ? '/admin/category/edit/' + editCategory._id : '/admin/category/add' %>" method="POST" onsubmit="return validateForm()">
                         <div class="mb-3">
                             <label for="name" class="form-label">Category Name</label>
                             <input type="text" class="form-control" id="name" name="name" value="<%= editCategory ? editCategory.name : '' %>" required>
+                            <div id="name-error" class="error-message">Name cannot start with an underscore or space.</div>
                         </div>
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
                             <input type="text" class="form-control" id="description" name="description" value="<%= editCategory ? editCategory.description : '' %>" required>
+                            <div id="description-error" class="error-message">Name cannot start with an underscore or space.</div>
+
                         </div>
                         <div class="mb-3">
                             <label for="categoryOffer" class="form-label">Offer</label>
                             <input type="number" class="form-control" id="categoryOffer" name="categoryOffer" value="<%= editCategory ? editCategory.categoryOffer : '' %>" required>
+                            <div id="offer-error" class="error-message">Offer value cannot be negative.</div>
+
                         </div>
                         <button type="submit" class="btn btn-primary"><%= editCategory ? 'Update Category' : 'Add Category' %></button>
                     </form>
@@ -144,50 +109,78 @@
                             <% }); %>
                         </tbody>
                     </table>
+                     <!-- Pagination Controls -->
+                     <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                          <% for(let i = 1; i <= totalPages; i++) { %>
+                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                              <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                            </li>
+                          <% } %>
+                        </ul>
+                      </nav>
+  
                 </div>
             </div>
         </div>
     </main>
 
-   
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/jquery-1.12.1.min.js"></script>
+    <script src="/js/popper.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/dataTables.bootstrap5.min.js"></script>
+    <script src="/js/dashboard.js"></script>
     <script>
-        function showAlert(message) {
-            alert(message);
+      document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const error = urlParams.get('error');
+        const message = urlParams.get('message');
+  
+        if (success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: success
+          });
+        }
+    
+      if (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error
+          });
+        }
+    });
+        function validateForm() {
+        const nameInput = document.getElementById('name');
+        const offerInput = document.getElementById('categoryOffer');
+        const nameError = document.getElementById('name-error');
+        const offerError = document.getElementById('offer-error');
+
+        let isValid = true;
+
+        // Validate name
+        if (/^[_\s]/.test(nameInput.value)) {
+          nameError.style.display = 'block';
+          isValid = false;
+        } else {
+          nameError.style.display = 'none';
         }
 
-        $(document).ready(function() {
-            $('.toggle-category-form').on('submit', function(event) {
-                event.preventDefault();
-                const form = $(this);
-                $.ajax({
-                    type: 'POST',
-                    url: form.attr('action'),
-                    success: function(response) {
-                        showAlert('Category status updated successfully');
-                        location.reload();
-                    },
-                    error: function(error) {
-                        showAlert('Failed to update category status');
-                    }
-                });
-            });
-        });
+        // Validate offer
+        if (parseFloat(offerInput.value) < 0) {
+          offerError.style.display = 'block';
+          isValid = false;
+        } else {
+          offerError.style.display = 'none';
+        }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOMContentLoaded event triggered");
-            const urlParams = new URLSearchParams(window.location.search);
-            console.log("URL parameters:", urlParams.toString());
-            const successMessage = urlParams.get('success');
-            const errorMessage = urlParams.get('error');
-            
-            if (successMessage) {
-                console.log("Success message:", successMessage);
-                showAlert(successMessage);
-            } else if (errorMessage) {
-                console.log("Error message:", errorMessage);
-                showAlert(errorMessage);
-            }
-        });
+        return isValid;
+      }
     </script>
+
 </body>
 </html>

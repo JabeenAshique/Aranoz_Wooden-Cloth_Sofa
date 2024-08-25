@@ -3,7 +3,7 @@ document.getElementById('productForm').addEventListener('submit', function(event
 
     const productName = document.getElementById('productName');
     const description = document.getElementById('description');
-    const author = document.getElementById('author');
+  
     const category = document.getElementById('category');
     const regularPrice = document.getElementById('regularPrice');
     const salePrice = document.getElementById('salePrice');
@@ -16,7 +16,19 @@ document.getElementById('productForm').addEventListener('submit', function(event
         element.classList.add('is-invalid');
         element.nextElementSibling.textContent = message;
     };
+    // Check if product name starts with _ or space
+    if (/^[ _]/.test(productName.value)) {
+      setInvalid(productName, 'Product name should not start with an underscore or space.');
+  } else {
+      setValid(productName);
+  }
 
+  // Check if description starts with _ or space
+  if (/^[ _]/.test(description.value)) {
+      setInvalid(description, 'Description should not start with an underscore or space.');
+  } else {
+      setValid(description);
+  }
     if (regularPrice.value < 0) {
         setInvalid(regularPrice, 'Regular price must be a positive number.');
     } else {

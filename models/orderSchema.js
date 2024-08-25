@@ -22,8 +22,20 @@ const orderSchema = new Schema({
         price : {
             type : Number,
             default :0
+        },
+        appliedOffer: { 
+            type: Number, 
+            default: 0 
         }
     }],
+    couponCode: {
+        type: String,
+        default: null // Store the coupon code applied
+    },
+    couponDiscount: {
+        type: Number,
+        default: 0 // Store the discount amount from the coupon
+    },
     totalPrice : {
         type : Number,
         required : true

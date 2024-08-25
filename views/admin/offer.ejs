@@ -1,0 +1,529 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | Coupon Management</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <style>
+    .navbar.bg-light {
+      background-color: #569c79 !important;
+    }
+    .offcanvas.bg-light {
+      background-color: #569c79 !important;
+    }
+    .navbar-light .navbar-nav .nav-link {
+      color: #ffffff !important;
+    }
+    .offcanvas .navbar-nav .nav-link {
+      color: #ffffff !important;
+    }
+    main {
+      margin-top: 56px; /* Adjust this based on your navbar height */
+      height: calc(100vh - 56px); /* Full height minus navbar */
+      overflow: auto;
+      margin-left: 270px; /* Adjust this based on your sidebar width */
+    }
+    .sidebar-nav {
+      width: 270px; /* Adjust this based on your sidebar width */
+      height: calc(100vh - 56px);
+      top: 56px;
+      overflow-y: auto;
+      position: fixed;
+      left: 0;
+    }
+    .navbar-brand {
+      color: white !important;
+    }
+    .content {
+      padding: 20px; /* Add some padding for better spacing */
+    }
+    .container-fluid {
+      padding: 0 20px; /* Adjust padding to reduce space */
+    }
+    .edit-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 5px;
+}
+
+.remove-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+.edit-button:hover {
+    background-color: #45a049;
+}
+
+.remove-button:hover {
+    background-color: #e53935;
+}
+.pagination .page-item.active .page-link {
+    background-color: #569c79 !important;
+    border-color: #569c79 !important;
+    color: white;
+}
+
+.pagination .page-link {
+    color: #569c79;
+}
+
+.pagination .page-link:hover {
+    background-color: #45a049;
+    border-color: #45a049;
+    color: white;
+}
+   
+  </style>
+</head>
+<body>
+  <%- include('sidebar') %>
+
+<main class="mt-5 pt-3">
+    <div class="container-fluid content">    
+      <div class="row">
+        <div class="col-md-12">
+          <h4>Offer Management</h4>
+          <button class="btn btn-success" data-toggle="modal" data-target="#createOfferModal">Add New Offer</button>
+          <input type="text" id="search-input" class="form-control d-inline" style="width: 200px;" placeholder="Search by offer name">
+          <button id="search-button" class="btn btn-success">Search</button>
+         
+          <!-- Offer Modal -->
+          <div class="modal fade" id="createOfferModal" tabindex="-1" role="dialog" aria-labelledby="createOfferModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="createOfferModalLabel">Create New Offer</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <form id="createOfferForm">
+                    <div class="form-group">
+                      <label for="offerName">Offer Name</label>
+                      <input type="text" class="form-control" id="offerName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="offerType">Offer Type</label>
+                      <select class="form-control" id="offerType" name="offerType" required>
+                        <option value="">Select</option>
+                        <option value="category">Category</option>
+                        <option value="product">Product</option>
+                        <option value="referral">Referral</option>
+                      </select>
+                    </div>
+  
+                    <!-- Category Selection -->
+                    <div class="form-group d-none" id="categorySelection">
+                      <label for="category">Select Category</label>
+                      <select class="form-control" id="category" name="category">
+                        <option value="">Select Category</option>
+                        <% categories.forEach(function(category) { %>
+                            <option value="<%= category._id %>"><%= category.name %></option>
+                        <% }); %>
+                    </select>
+                    </div>
+  
+                    <!-- Product Selection -->
+                    <div class="form-group d-none" id="productSelection">
+                      <label for="product">Select Product</label>
+                      <select class="form-control" id="product" name="product">
+                        <option value="">Select Product</option>
+                        <% products.forEach(function(product) { %>
+                            <option value="<%= product._id %>"><%= product.productName %></option>
+                        <% }); %>
+                    </select>
+                    </div>
+  
+                    <!-- Referral Fields -->
+                    <div class="form-group d-none" id="referralFields">
+                      <label for="referredAmount">Amount for Referred Person</label>
+                      <input type="number" class="form-control" id="referredAmount" name="referredAmount">
+                      <label for="referrerAmount" class="mt-2">Amount for Referrer</label>
+                      <input type="number" class="form-control" id="referrerAmount" name="referrerAmount">
+                    </div>
+                    <div class="form-group  d-none" id="offerAmountGroup">
+                        <label for="offerAmount">offerAmount</label>
+                        <input type="text" class="form-control" id="offerAmount" name="offerAmount" >
+                      </div>
+                    <div class="form-group">
+                      <label for="startTime">Start Time</label>
+                      <input type="date" class="form-control" id="startTime" name="startTime" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="endTime">End Time</label>
+                      <input type="date" class="form-control" id="endTime" name="endTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="offerName">Description</label>
+                        <input type="text" class="form-control" id="description" name="description" required>
+                      </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="submit" form="createOfferForm" class="btn btn-primary">Save Offer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- End Offer Modal -->
+        <!-- Start Edit modal -->
+         <!-- Edit Offer Modal -->
+<!-- Edit Offer Modal -->
+<div class="modal fade" id="editOfferModal" tabindex="-1" role="dialog" aria-labelledby="editOfferModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editOfferModalLabel">Edit Offer</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editOfferForm">
+          <input type="hidden" id="editOfferId" name="id">
+          <div class="form-group">
+            <label for="editOfferName">Offer Name</label>
+            <input type="text" class="form-control" id="editOfferName" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="editOfferType">Offer Type</label>
+            <select class="form-control" id="editOfferType" name="offerType" required>
+              <option value="">Select</option>
+              <option value="category">Category</option>
+              <option value="product">Product</option>
+              <option value="referral">Referral</option>
+            </select>
+          </div>
+
+          <!-- Edit Category Selection -->
+          <div class="form-group d-none" id="editCategorySelection">
+            <label for="editCategory">Select Category</label>
+            <select class="form-control" id="editCategory" name="category">
+              <option value="">Select Category</option>
+              <% categories.forEach(function(category) { %>
+                  <option value="<%= category._id %>"><%= category.name %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <!-- Edit Product Selection -->
+          <div class="form-group d-none" id="editProductSelection">
+            <label for="editProduct">Select Product</label>
+            <select class="form-control" id="editProduct" name="product">
+              <option value="">Select Product</option>
+              <% products.forEach(function(product) { %>
+                  <option value="<%= product._id %>"><%= product.productName %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <!-- Edit Referral Fields -->
+          <div class="form-group d-none" id="editReferralFields">
+            <label for="editReferredAmount">Amount for Referred Person</label>
+            <input type="number" class="form-control" id="editReferredAmount" name="referredAmount">
+            <label for="editReferrerAmount" class="mt-2">Amount for Referrer</label>
+            <input type="number" class="form-control" id="editReferrerAmount" name="referrerAmount">
+          </div>
+
+          <!-- Edit Offer Amount -->
+          <div class="form-group d-none" id="editOfferAmountGroup">
+            <label for="editOfferAmount">Offer Amount</label>
+            <input type="text" class="form-control" id="editOfferAmount" name="offerAmount">
+          </div>
+
+          <div class="form-group">
+            <label for="editStartTime">Start Date</label>
+            <input type="date" class="form-control" id="editStartTime" name="startTime" required>
+          </div>
+          <div class="form-group">
+            <label for="editEndTime">End Date</label>
+            <input type="date" class="form-control" id="editEndTime" name="endTime" required>
+          </div>
+          <div class="form-group">
+            <label for="editDescription">Description</label>
+            <input type="text" class="form-control" id="editDescription" name="description" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="saveEditedOffer()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+        <!-- End Edit modal -->
+          <div class="row mt-4">
+            <div class="col-12">
+                <table class="table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>OfferType</th>
+                            <th>Status</th>
+                            <th>End Time</th>
+                            <th>Start Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% offers.forEach(offer => { %>
+                        <tr>
+                            <td><%= offer.name %></td>
+                            <td><%= offer.offerType %></td>
+                            <td><%= offer.isActive ? 'Active' : 'Inactive' %></td> <!-- Add your status logic here -->
+                            <td><%= new Date(offer.startDate).toLocaleDateString() %></td>
+                            <td><%= new Date(offer.endDate).toLocaleDateString() %></td>
+                            <td>
+                                <button class="btn btn-primary edit-button" onclick="editOffer('<%= offer._id %>')">Edit</button>
+                                <button class="btn btn-danger remove-button" onclick="removeOffer('<%= offer._id %>')">Delete</button>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Pagination -->
+        <nav aria-label="Page navigation">
+          <ul class="pagination">
+            <% for(let i = 1; i <= totalPages; i++) { %>
+              <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                <a class="page-link" href="/admin/offers?page=<%= i %>&search=<%= encodeURIComponent(searchQuery) %>"><%= i %></a>
+              </li>
+            <% } %>
+          </ul>
+        </nav>
+        
+        
+      </div>
+    </div>
+  </main>
+  
+  <!-- jQuery and Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  
+  <script>
+     document.getElementById('search-button').addEventListener('click', function() {
+    const searchQuery = document.getElementById('search-input').value.trim();
+    if (searchQuery) {
+        window.location.href = `/admin/offers?page=1&search=${encodeURIComponent(searchQuery)}`;
+    } else {
+        window.location.href = `/admin/offers?page=1`;
+    }
+  });
+  document.getElementById('offerType').addEventListener('change', function() {
+      const offerType = this.value;
+      
+      // Hide all conditional fields initially
+      document.getElementById('categorySelection').classList.add('d-none');
+      document.getElementById('productSelection').classList.add('d-none');
+      document.getElementById('referralFields').classList.add('d-none');
+      document.getElementById('offerAmountGroup').classList.add('d-none');
+      // Show fields based on the selected offer type
+      if (offerType === 'category') {
+          document.getElementById('categorySelection').classList.remove('d-none');
+          document.getElementById('offerAmountGroup').classList.remove('d-none');
+         
+      } else if (offerType === 'product') {
+          document.getElementById('productSelection').classList.remove('d-none');
+          document.getElementById('offerAmountGroup').classList.remove('d-none');
+          
+      } else if (offerType === 'referral') {
+          document.getElementById('referralFields').classList.remove('d-none');
+          document.getElementById('offerAmount').removeAttribute('required'); 
+      }
+  });
+  
+  // Handle form submission
+  document.getElementById('createOfferForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent default form submission
+  
+      const formData = new FormData(this);
+      const offerId = formData.get('id');
+      
+      // Convert FormData to a plain object for easy handling
+      const offerData = {
+          name: formData.get('name'),
+          offerType: formData.get('offerType'),
+          description:formData.get('description'),
+          offerAmount:formData.get('offerAmount'),  
+          category: formData.get('category'),
+          product: formData.get('product'),
+          referredAmount: formData.get('referredAmount'),
+          referrerAmount: formData.get('referrerAmount'),
+          startTime: formData.get('startTime'),
+          endTime: formData.get('endTime')
+         
+      };
+  
+      // Log offer data to console for debugging
+      console.log('Offer Data:', offerData);
+  // Send the data to the server
+  fetch('/admin/offers', {
+        method: 'POST',
+        body: JSON.stringify(offerData),
+        headers: {
+            'Content-Type': 'application/json'
+        },
+       
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Offer created successfully');
+            // Optionally, close the modal and refresh the table
+            $('#createOfferModal').modal('hide');
+            location.reload();
+        } else {
+            alert('Failed to create offer: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while creating the offer.');
+    });
+});
+
+function editOffer(offerId) {
+    // Fetch the offer details using the offerId
+    fetch(`/admin/offers/${offerId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const offer = data.data;
+
+                // Populate the form fields with the offer data
+                document.getElementById('editOfferId').value = offer._id;
+                document.getElementById('editOfferName').value = offer.name;
+                document.getElementById('editOfferType').value = offer.offerType;
+                document.getElementById('editStartTime').value = offer.startTime ? new Date(offer.startTime).toISOString().split('T')[0] : '';
+                document.getElementById('editEndTime').value = offer.endTime ? new Date(offer.endTime).toISOString().split('T')[0] : '';
+                document.getElementById('editDescription').value = offer.description;
+
+                // Reset the visibility of all conditional fields
+                document.getElementById('editCategorySelection').classList.add('d-none');
+                document.getElementById('editProductSelection').classList.add('d-none');
+                document.getElementById('editReferralFields').classList.add('d-none');
+                document.getElementById('editOfferAmountGroup').classList.add('d-none');
+
+                // Show fields based on the selected offer type
+                if (offer.offerType === 'category') {
+                    document.getElementById('editCategorySelection').classList.remove('d-none');
+                    document.getElementById('editCategory').value = offer.category || '';
+                    document.getElementById('editOfferAmountGroup').classList.remove('d-none');
+                    document.getElementById('editOfferAmount').value = offer.offerAmount || '';
+                } else if (offer.offerType === 'product') {
+                    document.getElementById('editProductSelection').classList.remove('d-none');
+                    document.getElementById('editProduct').value = offer.product || '';
+                    document.getElementById('editOfferAmountGroup').classList.remove('d-none');
+                    document.getElementById('editOfferAmount').value = offer.offerAmount || '';
+                } else if (offer.offerType === 'referral') {
+                    document.getElementById('editReferralFields').classList.remove('d-none');
+                    document.getElementById('editReferredAmount').value = offer.referredAmount || '';
+                    document.getElementById('editReferrerAmount').value = offer.referrerAmount || '';
+                }
+
+                // Show the modal
+                $('#editOfferModal').modal('show');
+            } else {
+                alert('Failed to fetch offer details: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching offer data:', error);
+        });
+}
+
+
+function saveEditedOffer() {
+    const offerId = document.getElementById('editOfferId').value;
+
+    const editedOfferData = {
+        name: document.getElementById('editOfferName').value,
+        offerType: document.getElementById('editOfferType').value,
+        startTime: document.getElementById('editStartTime').value,
+        endTime: document.getElementById('editEndTime').value,
+        description: document.getElementById('editDescription').value,
+    };
+
+    // Add additional fields based on offer type
+    if (editedOfferData.offerType === 'category') {
+        editedOfferData.category = document.getElementById('editCategory').value;
+        editedOfferData.offerAmount = document.getElementById('editOfferAmount').value;
+    } else if (editedOfferData.offerType === 'product') {
+        editedOfferData.product = document.getElementById('editProduct').value;
+        editedOfferData.offerAmount = document.getElementById('editOfferAmount').value;
+    } else if (editedOfferData.offerType === 'referral') {
+        editedOfferData.referredAmount = document.getElementById('editReferredAmount').value;
+        editedOfferData.referrerAmount = document.getElementById('editReferrerAmount').value;
+    }
+
+    fetch(`/admin/offers/${offerId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editedOfferData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Offer updated successfully');
+            $('#editOfferModal').modal('hide');
+            location.reload(); // Reload the page to reflect the changes
+        } else {
+            alert('Failed to update offer: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error updating offer:', error);
+    });
+}
+
+function removeOffer(offerId) {
+    if (confirm('Are you sure you want to delete this offer? This action cannot be undone.')) {
+        fetch(`/admin/offers/${offerId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Offer deleted successfully');
+                location.reload(); // Reload the page to reflect the changes
+            } else {
+                alert('Failed to delete offer: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting offer:', error);
+            alert('An error occurred while deleting the offer.');
+        });
+    }
+}
+
+  </script>
+  
+  </body>
+  </html>

@@ -2,213 +2,206 @@
 <html lang="en">
 
 <head>
-
-  <head>
-    <!-- Required meta tags -->
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Profile Page</title>
+    <title>Add Address</title>
     <link rel="icon" href="img/favicon.png">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
-    <!-- animate CSS -->
-    <link rel="stylesheet" href="css/animate.css">
-    <!-- owl carousel CSS -->
-    <link rel="stylesheet" href="css/owl.carousel.min.css">
-    <!-- font awesome CSS -->
-    <link rel="stylesheet" href="css/all.css">
-    <!-- flaticon CSS -->
-    <link rel="stylesheet" href="css/flaticon.css">
-    <link rel="stylesheet" href="css/themify-icons.css">
-    <!-- font awesome CSS -->
-    <link rel="stylesheet" href="css/magnific-popup.css">
-    <!-- swiper CSS -->
-    <link rel="stylesheet" href="css/slick.css">
-    <!-- style CSS -->
+    <!-- Additional CSS -->
     <link rel="stylesheet" href="css/style.css">
     <style>
-      .profile-box, .address-box {
-        padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        background-color: #ffffff; /* Ensure the background is white */
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-  
-      .profile-header, .address-item {
-        margin-bottom: 20px;
-        padding: 20px;
-        border: 1px solid #ffffff;
-        border-radius: 8px;
-        background-color: #ffffff; /* Ensure the background is white */
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-  
-      .profile-photo {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-      }
-  
-      .profile-photo-edit {
-        position: absolute;
-        bottom: 10px;
-        right: 10px;
-      }
-  
-      .profile-photo-edit a {
-        color: #000;
-      }
-  
-      .btn_3 {
-        margin-right: 10px;
-        background-color: #ff007f; /* Ensure the button color is consistent */
-        color: white; /* Ensure the button text color is white */
-      }
-  
-      .btn_3:hover {
-        background-color: #ff005a; /* Darken the button on hover */
-      }
-  
-      .address-actions {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 10px;
-      }
-  
-      .form-control {
-        background-color: #ffffff; /* Ensure input fields have a white background */
-      }
-      a{
-          text-decoration: none;
-      }
+        .profile-box, .address-box {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn_3 {
+            margin-right: 10px;
+            background-color: #ff007f;
+            color: white;
+        }
+        .btn_3:hover {
+            background-color: #ff005a;
+        }
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+        }
     </style>
+</head>
 
 <body>
-  
-  <%- include('header') %>
-   <!-- Update Address section start -->
-   <section class="update-address-section padding_top">
-    <div class="container">
-      <div class="row">
-        <div class="col-12">
-          <h2 class="contact-title">Manage Addresses</h2>
-        </div>
-        <div class="col-lg-12">
-          <!-- Add New Address Section -->
-          <div class="card address-box mt-4">
-            <div class="card-header">
-              <h5>Add New Address</h5>
-            </div>
-            <div class="card-body">
-              <form class="form-contact contact_form" action="/addAddress" method="post" id="addAddressForm" novalidate="novalidate">
-                <div class="row">
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="addressType">Address Type</label>
-                      <input class="form-control" name="addressType" id="addressType" type="text" placeholder='Address Type'>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="name">Name</label>
-                      <input class="form-control" name="name" id="name" type="text" placeholder='Name'>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="landMark">Landmark</label>
-                      <input class="form-control" name="landMark" id="landMark" type="text" placeholder='Landmark'>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="city">City</label>
-                      <input class="form-control" name="city" id="city" type="text" placeholder='City'>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="state">State</label>
-                      <input class="form-control" name="state" id="state" type="text" placeholder='State'>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="pincode">Pincode</label>
-                      <input class="form-control" name="pincode" id="pincode" type="text" placeholder='Pincode'>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="phone">Phone</label>
-                      <input class="form-control" name="phone" id="phone" type="text" placeholder='Phone'>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="form-group">
-                      <label for="altPhone">Alternate Phone</label>
-                      <input class="form-control" name="altPhone" id="altPhone" type="text" placeholder='Alternate Phone'>
-                    </div>
-                  </div>
-                </div>
-                <div class="form-group mt-3">
-                  <button type="submit" class="btn_3 button-contactForm">Save Address</button>
-                </div>
-              </form>
-            </div>
-          </div>
-          <!-- End Add New Address Section -->
-  <!-- Update Address section end -->
+    <%- include('header') %>
 
-  <!--::footer_part start::-->
-  <footer class="footer_part">
-    <div class="container">
-      <div class="copyright_part">
+    <!-- Add New Address Section -->
+    <section class="update-address-section padding_top">
         <div class="container">
-          <div class="row">
-            <div class="col-lg-8">
-              <div class="copyright_text">
-                <P><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="ti-heart" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-                <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></P>
-              </div>
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="contact-title">Add New Address</h2>
+                </div>
+                <div class="col-lg-12">
+                    <div class="card address-box mt-4">
+                        <div class="card-header">
+                            <h5>Add New Address</h5>
+                        </div>
+                        <div class="card-body">
+                            <form class="form-contact contact_form" action="/addAddress" method="post" id="addAddressForm" novalidate="novalidate">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="addressType">Address Type</label>
+                                            <input class="form-control" name="addressType" id="addressType" type="text" placeholder="Address Type">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="name">Name</label>
+                                            <input class="form-control" name="name" id="name" type="text" placeholder="Name">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="landMark">Landmark</label>
+                                            <input class="form-control" name="landMark" id="landMark" type="text" placeholder="Landmark">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="city">City</label>
+                                            <input class="form-control" name="city" id="city" type="text" placeholder="City">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="state">State</label>
+                                            <input class="form-control" name="state" id="state" type="text" placeholder="State">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="pincode">Pincode</label>
+                                            <input class="form-control" name="pincode" id="pincode" type="text" placeholder="Pincode">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="phone">Phone</label>
+                                            <input class="form-control" name="phone" id="phone" type="text" placeholder="Phone">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="altPhone">Alternate Phone</label>
+                                            <input class="form-control" name="altPhone" id="altPhone" type="text" placeholder="Alternate Phone">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mt-3">
+                                    <button type="submit" class="btn_3 button-contactForm">Save Address</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-lg-4">
-              <div class="footer_icon social_icon">
-                <ul class="list-unstyled">
-                  <li><a href="#" class="single_social_icon"><i class="fab fa-facebook-f"></i></a></li>
-                  <li><a href="#" class="single_social_icon"><i class="fab fa-twitter"></i></a></li>
-                  <li><a href="#" class="single_social_icon"><i class="fas fa-globe"></i></a></li>
-                  <li><a href="#" class="single_social_icon"><i class="fab fa-behance"></i></a></li>
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
-  </footer>
-  <!--::footer_part end::-->
+    </section>
+    <!-- End Add New Address Section -->
 
-  <!-- jquery plugins here-->
-  <script src="js/jquery-1.12.1.min.js"></script>
-  <script src="js/popper.min.js"></script>
-  <script src="js/bootstrap.min.js"></script>
-  <script src="js/jquery.magnific-popup.js"></script>
-  <script src="js/swiper.min.js"></script>
-  <script src="js/masonry.pkgd.js"></script>
-  <script src="js/owl.carousel.min.js"></script>
-  <script src="js/jquery.nice-select.min.js"></script>
-  <script src="js/slick.min.js"></script>
-  <script src="js/jquery.counterup.min.js"></script>
-  <script src="js/waypoints.min.js"></script>
-  <script src="js/jquery.ajaxchimp.min.js"></script>
-  <script src="js/jquery.form.js"></script>
-  <script src="js/jquery.validate.min.js"></script>
-  <script src="js/mail-script.js"></script>
-  <script src="js/custom.js"></script>
+    <!-- Footer -->
+    <%- include('footer') %>
+
+    <!-- Validation Script -->
+    <script>
+        document.getElementById('addAddressForm').addEventListener('submit', function(event) {
+            // Clear previous validation messages
+            document.querySelectorAll('.error-message').forEach(function(elem) {
+                elem.remove();
+            });
+
+            let isValid = true;
+
+            // Validate Address Type
+            const addressType = document.getElementById('addressType');
+            if (addressType.value.trim() === '') {
+                isValid = false;
+                showError(addressType, 'Address Type is required');
+            }
+
+            // Validate Name
+            const name = document.getElementById('name');
+            if (name.value.trim() === '') {
+                isValid = false;
+                showError(name, 'Name is required');
+            }
+
+            // Validate Landmark
+            const landMark = document.getElementById('landMark');
+            if (landMark.value.trim() === '') {
+                isValid = false;
+                showError(landMark, 'Landmark is required');
+            }
+
+            // Validate City
+            const city = document.getElementById('city');
+            if (city.value.trim() === '') {
+                isValid = false;
+                showError(city, 'City is required');
+            }
+
+            // Validate State
+            const state = document.getElementById('state');
+            if (state.value.trim() === '') {
+                isValid = false;
+                showError(state, 'State is required');
+            }
+
+            // Validate Pincode
+            const pincode = document.getElementById('pincode');
+            if (pincode.value.trim() === '') {
+                isValid = false;
+                showError(pincode, 'Pincode is required');
+            } else if (!/^\d{6}$/.test(pincode.value.trim())) {
+                isValid = false;
+                showError(pincode, 'Pincode must be a 6-digit number');
+            }
+
+            // Validate Phone
+            const phone = document.getElementById('phone');
+            if (phone.value.trim() === '') {
+                isValid = false;
+                showError(phone, 'Phone is required');
+            } else if (!/^\d{10}$/.test(phone.value.trim())) {
+                isValid = false;
+                showError(phone, 'Phone must be a 10-digit number');
+            }
+
+            // Validate Alternate Phone (optional but must be valid if provided)
+            const altPhone = document.getElementById('altPhone');
+            if (altPhone.value.trim() !== '' && !/^\d{10}$/.test(altPhone.value.trim())) {
+                isValid = false;
+                showError(altPhone, 'Alternate Phone must be a 10-digit number');
+            }
+
+            // Prevent form submission if validation fails
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+
+        function showError(input, message) {
+            const errorElem = document.createElement('span');
+            errorElem.className = 'error-message';
+            errorElem.textContent = message;
+            input.parentElement.appendChild(errorElem);
+        }
+    </script>
+
 </body>
 
 </html>

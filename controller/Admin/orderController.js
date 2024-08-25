@@ -69,7 +69,10 @@ const Order = require('../../models/orderSchema');
                 if (!order) {
                     return res.status(404).send('Order not found');
                 }
-        
+         // Prevent status update if order is already delivered or cancelled
+         if (order.status === 'Delivered' || order.status === 'Cancelled') {
+            return res.status(400).send('Cannot update status once the order is delivered or cancelled');
+        }
                 order.status = status;
                 // res.send({ success: true });
                 await order.save();

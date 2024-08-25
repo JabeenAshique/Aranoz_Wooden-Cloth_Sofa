@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .thankyou-container {
+            text-align: center;
+            padding: 50px 20px;
+            background-color: #ffffff;
+            max-width: 800px;
+            margin: 50px auto;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .thankyou-container h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .thankyou-container p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        .thankyou-container img {
+            max-width: 100px;
+            margin-bottom: 30px;
+        }
+
+        .thankyou-icons {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .thankyou-icons img {
+            max-width: 50px;
+        }
+
+        .thankyou-container a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #ff7f50;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+        }
+
+        .thankyou-container a:hover {
+            background-color: #ff6347;
+        }
+
+        .brand-logo {
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('header') %>
+    <section class="cart_area padding_top">
+        <div class="thankyou-container ">
+        <img src="/img/client_logo/client_logo_1.png" alt="Brand Logo" class="brand-logo">
+        <h1>Thank you.</h1>
+        <p>Your order was completed successfully.</p>
+        <p>An email receipt including the details about your order has been sent to the email address provided. Please keep it for your records.</p>
+
+        <div class="thankyou-icons">
+            <img src="img/email-icon.png" alt="Email Icon">
+            <img src="img/print-icon.png" alt="Print Icon">
+        </div>
+
+        <a href="/shop">Continue Shopping</a>
+    </div>
+        </section>
+  
+        <%- include('footer') %>
+
+</body>
+
+</html>

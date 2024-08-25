@@ -171,15 +171,23 @@
                                     <p><strong>Shipping:</strong> Pending</p>
                                     <p><strong>Pay method:</strong> <%= order.payment %></p>
                                     <p><strong>Status:</strong> <span class="<%= order.status === 'Cancelled' ? 'cancelled' : '' %>"><%= order.status %></span></p>
-                                    <form id="statusForm" action="/admin/order/<%= order._id %>/status" method="POST">
+                                    <!-- <form id="statusForm" action="/admin/order/<%= order._id %>/status" method="POST">
                                         <select name="status" class="form-select">
                                             <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                                             <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                                             <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                                             <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-primary mt-2">Update Status</button>
-                                    </form>
+                                        </select> -->
+                                        <form id="statusForm" action="/admin/order/<%= order._id %>/status" method="POST">
+                                            <select name="status" class="form-select" <%= (order.status === 'Delivered' || order.status === 'Cancelled') ? 'disabled' : '' %>>
+                                                <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                                <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                                <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                                <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-primary mt-2" <%= (order.status === 'Delivered' || order.status === 'Cancelled') ? 'disabled' : '' %>>Update Status</button>
+                                        </form>
+                                        
                                 </div>
                                 <div class="col-md-4 order-address">
                                     <h5>Deliver to</h5>

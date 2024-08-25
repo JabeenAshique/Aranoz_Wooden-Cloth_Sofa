@@ -70,7 +70,14 @@ router.post('/finalizeOrder', authMiddlewares.ensureAuthenticated, orderControll
 
 router.get('/wishlist', authMiddlewares.ensureAuthenticated,wishlistController.getWishListPage);
 router.post('/wishlist/add',  authMiddlewares.ensureAuthenticated,wishlistController.addToWishlist);
-
 router.post('/wishlist/remove',  authMiddlewares.ensureAuthenticated,wishlistController.removeFromWishlist);
+
+//success Page
+
+router.get('/success', (req, res) => {
+    const orderId = req.query.orderId;
+    res.render('success', { orderId });
+});
+
 
 module.exports = router;

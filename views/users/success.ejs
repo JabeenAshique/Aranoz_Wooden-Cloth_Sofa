@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -77,24 +76,38 @@
 
 <body>
     <%- include('header') %>
+    
     <section class="cart_area padding_top">
-        <div class="thankyou-container ">
-        <img src="/img/client_logo/client_logo_1.png" alt="Brand Logo" class="brand-logo">
-        <h1>Thank you.</h1>
-        <p>Your order was completed successfully.</p>
-        <p>An email receipt including the details about your order has been sent to the email address provided. Please keep it for your records.</p>
+        <div class="thankyou-container">
+            <img src="/img/client_logo/client_logo_1.png" alt="Brand Logo" class="brand-logo">
+            <h1>Thank you.</h1>
+            <p id="orderStatus">Your order status will be displayed here.</p> <!-- Order status dynamically updated -->
+            <p>An email receipt including the details about your order has been sent to the email address provided. Please keep it for your records.</p>
 
-        <div class="thankyou-icons">
-            <img src="img/email-icon.png" alt="Email Icon">
-            <img src="img/print-icon.png" alt="Print Icon">
+            <div class="thankyou-icons">
+                <img src="img/email-icon.png" alt="Email Icon">
+                <img src="img/print-icon.png" alt="Print Icon">
+            </div>
+
+            <a href="/shop">Continue Shopping</a>
         </div>
+    </section>
 
-        <a href="/shop">Continue Shopping</a>
-    </div>
-        </section>
-  
-        <%- include('footer') %>
+    <%- include('footer') %>
 
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('orderId');
+        const paymentStatus = urlParams.get('paymentStatus');
+
+        console.log("Order ID:", orderId);  // For debugging
+        console.log("Payment Status:", paymentStatus);  // For debugging
+
+        if (paymentStatus === 'Success') {
+            document.getElementById('orderStatus').innerText = 'Your order has been placed successfully!';
+        } else {
+            document.getElementById('orderStatus').innerText = 'Your payment failed, but your order is pending. Please complete the payment to confirm.';
+        }
+    </script>
 </body>
-
 </html>

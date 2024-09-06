@@ -77,6 +77,17 @@
                   <p><strong>Type:</strong> <%= order.address.addressType %></p>
                   <p><strong>Landmark:</strong> <%= order.address.landMark %></p>
                   <p><strong>City:</strong> <%= order.address.city %>, <strong>State:</strong> <%= order.address.state %></p>
+                  <div class="order-status">
+                    
+                      <h5>Payment Status: <span class="<%= order.paymentStatus === 'Failed' ? 'text-danger' : 'text-success' %>"><%= order.paymentStatus %></span></h5>
+                    </div>
+                 <!-- Show the repayment button if the payment failed -->
+<% if (order.paymentStatus === 'Failed') { %>
+  <button class="btn btn-primary" id="retryPaymentButton" onclick="retryPayment('<%= order.razorpayOrderId %>')">
+    Retry Payment
+  </button>
+<% } %>
+                  
                 </div>
               </div>
               <div class="order-actions">
@@ -178,7 +189,51 @@ function confirmReturn(orderId) {
     });
 }
 
+function retryPayment(razorpayOrderId) {
+    fetch(`/order/retryPayment`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ razorpayOrderId: razorpayOrderId }) // Send the razorpayOrderId to the backend
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            var options = {
+                "key": data.key,
+                "amount": data.amount,  // Amount in the smallest currency unit (paise)
+                "currency": data.currency,
+                "name": data.name,
+                "description": "Order Repayment",
+                "image": "/your_logo.png",
+                "order_id": data.razorpayOrderId,  // Use the existing Razorpay order ID
+                "handler": function (response) {
+                    // Payment success, redirect to success page or finalize payment
+                    window.location.href = `/success?orderId=${data.orderId}&paymentStatus=Success`;
+                },
+                "modal": {
+                    "ondismiss": function () {
+                        // Payment dismissed, handle failure again
+                        Swal.fire('Payment Failed', 'Your payment was not completed. Please try again.', 'error');
+                    }
+                }
+            };
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+        } else {
+            Swal.fire('Error', 'Failed to initiate repayment. Please try again.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+    });
+}
+
+
 </script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

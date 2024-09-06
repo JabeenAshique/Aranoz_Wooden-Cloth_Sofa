@@ -199,10 +199,6 @@
                   <label for="cod">Cash On Delivery</label>
                   <div class="check"></div>
                 </div>
-                <p>
-                  Please send a check to Store Name, Store Street, Store Town,
-                  Store State / County, Store Postcode.
-                </p>
               </div>
               <div class="payment_item">
                 <div class="radion_btn">
@@ -210,10 +206,7 @@
                   <label for="online">RazorPay</label>
                   <div class="check"></div>
                 </div>
-                <p>
-                  Please send a check to Store Name, Store Street, Store Town,
-                  Store State / County, Store Postcode.
-                </p>
+                
               </div>
               <div class="payment_item">
                 <div class="radion_btn">
@@ -425,18 +418,20 @@ if (paymentMethod === 'Razorpay') {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                var options = {
-                    "key": data.key,
-                    "amount": data.amount, // amount in the smallest currency unit (paise)
-                    "currency": data.currency,
-                    "name": data.name,
-                    "description": "Order Payment",
-                    "image": "/your_logo.png",
-                    "order_id": data.razorpayOrderId, // Razorpay order ID
-                    "handler": function (response) {
-                      console.log('Razorpay payment successful:', response);
-                        finalizeOrderPlacement(addressId, paymentMethod, data.razorpayOrderId, response.razorpay_payment_id);
-                    },
+              var options = {
+                "key": data.key,
+                "amount": data.amount,  // amount in the smallest currency unit (paise)
+                "currency": data.currency,
+                "name": data.name,
+                "description": "Order Payment",
+                "image": "/your_logo.png",
+                "order_id": data.razorpayOrderId,  // Razorpay order ID
+                "handler": function (response) {
+                    // Payment success, send paymentStatus as 'Success'
+                    finalizeOrderPlacement(addressId, 'razorpay', 'Success', data.razorpayOrderId, response.razorpay_payment_id);
+                },
+                
+               
                     "prefill": {
                         "name": "Jabeen K P",
                         "email": "jbjaby@gmail.com",
@@ -444,8 +439,16 @@ if (paymentMethod === 'Razorpay') {
                     },
                     "theme": {
                         "color": "#3399cc"
+                    },
+                    "modal": {
+                    "ondismiss": function() {
+                        // Payment dismissed, set paymentStatus to 'Failed'
+                        finalizeOrderPlacement(addressId, 'razorpay', 'Failed', data.razorpayOrderId);
                     }
-                };
+                }
+            };
+                
+                
                 var rzp1 = new Razorpay(options);
                 rzp1.open();
             } else {
@@ -473,12 +476,14 @@ if (paymentMethod === 'Razorpay') {
         finalizeOrderPlacement(addressId, paymentMethod);
     }
 }
-    function finalizeOrderPlacement(addressId, paymentMethod, razorpayOrderId = null, razorpayPaymentId = null) {
+function finalizeOrderPlacement(addressId, paymentMethod, paymentStatus, razorpayOrderId, razorpayPaymentId = null)  {
         const orderData = {
             addressId: addressId,
             payment: paymentMethod,
+            paymentStatus: paymentStatus,
             razorpayOrderId: razorpayOrderId,
-            razorpayPaymentId: razorpayPaymentId
+            razorpayPaymentId: razorpayPaymentId,
+            
         };
 
         fetch('/placeOrder', {
@@ -490,29 +495,17 @@ if (paymentMethod === 'Razorpay') {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Order Placed',
-                    text: 'Your order has been placed successfully!',
-                });
-                window.location.href = `/success?orderId=${data.orderId}` // Redirect to the orders page
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops',
-                    text: 'Failed to place order, please try again!',
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops',
-                text: 'An error occurred. Please try again.',
-            });
-        });
+        if (data.success) {
+            window.location.href = `/success?orderId=${data.orderId}&paymentStatus=${paymentStatus}`;
+        } else {
+            Swal.fire('Error', 'Failed to place the order. Please try again.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+    });
+       
     }
 
     var addresses = JSON.parse(`<%- JSON.stringify(addresses) %>`);

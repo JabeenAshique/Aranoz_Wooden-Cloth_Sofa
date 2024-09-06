@@ -73,6 +73,9 @@ router.post('/return/:orderId',  authMiddlewares.ensureAuthenticated,orderContro
 router.post('/order/createRazorpayOrder', authMiddlewares.ensureAuthenticated, orderController.createRazorpayOrder);
 router.post('/finalizeOrder', authMiddlewares.ensureAuthenticated, orderController.finalizeOrderPlacement);
 router.get('/download-invoice/:orderId',authMiddlewares.ensureAuthenticated, orderController.downloadInvoice);
+router.post('/order/:orderId/retryPayment',authMiddlewares.ensureAuthenticated,orderController.retryPayment);
+
+
 
 
 

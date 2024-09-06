@@ -4,27 +4,81 @@ const Coupon = require('../../models/couponSchema');
 const Offer= require("../../models/offerSchema")
 const mongoose = require('mongoose');
 
+
+const calculateDiscounts = async (user, couponCode, req) => {
+    let productDiscount = 0;
+    let couponDiscount = 0;
+    let couponApplied = false;
+    let appliedCouponCode = couponCode;
+
+    const currentDate = new Date();
+
+    for (const item of user.cart) {
+        const applicableOffers = await Offer.find({
+            $or: [
+                { category: item.productId.category },
+                { product: item.productId._id }
+            ],
+            startDate: { $lte: currentDate },
+            endDate: { $gte: currentDate }
+        });
+
+        const maxOffer = Math.max(...applicableOffers.map(offer => offer.offerAmount), 0);
+        productDiscount += maxOffer * item.quantity;
+        item.appliedOffer = maxOffer;
+    }
+
+    if (req.session.coupon) {
+        couponDiscount = req.session.coupon.discount;
+        couponApplied = true;
+        appliedCouponCode = req.session.coupon.name;
+    }
+
+    if (appliedCouponCode && !couponApplied) {
+        const coupon = await Coupon.findOne({ name: appliedCouponCode });
+        if (coupon && currentDate <= coupon.expireOn) {
+            const totalPrice = user.cart.reduce((acc, item) => acc + (item.quantity * item.productId.salePrice), 0);
+            if (totalPrice >= coupon.minimumPrice) {
+                couponDiscount = coupon.offerPrice;
+                couponApplied = true;
+            } else {
+                throw new Error(`Minimum purchase amount should be ₹${coupon.minimumPrice}`);
+            }
+        } else if (coupon) {
+            throw new Error('Coupon has expired.');
+        } else {
+            throw new Error('Coupon not found.');
+        }
+    }
+
+    return { productDiscount, couponDiscount, couponApplied, appliedCouponCode };
+};
+
 const loadCheckoutPage = async (req, res) => {
     try {
         if (!req.user || !req.user._id) {
             console.error('Unauthorized: User not logged in');
             return res.status(401).send('Unauthorized: User not logged in');
         }
-
+        const cartCount = req.session.cartCount || 0;
+        const wishlistCount = req.session.wishlistCount || 0;
         const userId = req.user._id;
-
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            console.error('Invalid User ID');
-            return res.status(400).send('Invalid User ID');
-        }
-
+        const { couponCode } = req.body;
         const user = await User.findById(userId).populate('cart.productId');
+        const { productDiscount, couponDiscount, couponApplied, appliedCouponCode } = await calculateDiscounts(user, couponCode, req);
+
 
         if (!user) {
             console.error('User not found');
             return res.status(404).send('User not found');
         }
 
+         // Calculate wallet balance
+         let walletBalance = 0;
+         if (user.walletTransactions && user.walletTransactions.length > 0) {
+             const lastTransaction = user.walletTransactions[user.walletTransactions.length - 1];
+             walletBalance = lastTransaction.walletBalance;
+         }
         const addresses = await Address.find({ userId: userId });
 
         if (!addresses || addresses.length === 0) {
@@ -33,12 +87,13 @@ const loadCheckoutPage = async (req, res) => {
             console.log('Addresses found:', addresses);
         }
 
-        // Initialize the totals and discounts
-        let originalTotal = 0;
-        let cartTotal = 0;
-        let totalDiscount = 0;
-        let finalOffer = 0;
+        // Initialize the necessary variables
+            let originalTotal = 0;
+            let cartTotal = 0;
+            let totalDiscount = 0;
+            let finalOffer = 0;
 
+      
         // Make sure the products are fully populated
         const cartItems = user.cart.map(item => {
             if (!item.productId) {
@@ -54,53 +109,22 @@ const loadCheckoutPage = async (req, res) => {
             };
         }).filter(item => item !== null); // Filter out any null items
 
-        // Calculate total discount
-        for (const item of cartItems) {
-            const currentDate = new Date();
+         finalOffer = productDiscount;
 
-            const applicableOffers = await Offer.find({
-                $or: [
-                    { category: item.product.category },
-                    { product: item.product._id }
-                ],
-                startDate: { $lte: currentDate },
-                endDate: { $gte: currentDate }
-            });
+        // Calculate the total price after applying the best offer
+        cartTotal = cartItems.reduce((total, item) => {
+             return total + (item.quantity * (item.product.salePrice - productDiscount - couponDiscount));
+        }, 0);
 
-            let maxCategoryOffer = 0;
-            let maxProductOffer = 0;
-
-            applicableOffers.forEach(offer => {
-                if (offer.category && offer.category.toString() === item.product.category.toString()) {
-                    if (offer.offerAmount > maxCategoryOffer) {
-                        maxCategoryOffer = offer.offerAmount;
-                    }
-                } else if (offer.product && offer.product.toString() === item.product._id.toString()) {
-                    if (offer.offerAmount > maxProductOffer) {
-                        maxProductOffer = offer.offerAmount;
-                    }
-                }
-            });
-
-            const bestOfferForItem = Math.max(maxCategoryOffer, maxProductOffer);
-            finalOffer += bestOfferForItem * item.quantity;
-
-            // Calculate the total price after applying the best offer
-            cartTotal += (item.quantity * (item.product.salePrice - bestOfferForItem));
-        }
-
-        // Calculate the total discount
-        totalDiscount = originalTotal - cartTotal;
+         // Calculate the total discount
+        totalDiscount = originalTotal - cartTotal ;
+        console.log(`Total Discount ${totalDiscount}`)
 
         // Ensure the cart total doesn't go below zero
         cartTotal = Math.max(0, cartTotal);
 
-        console.log('Cart Items:', cartItems);
-        console.log('Cart Total:', cartTotal);
-        console.log('Total Discount:', totalDiscount);
-
         // Pass the discount amount to the checkout page along with other details
-        res.render('checkOut', { addresses, cartItems, cartTotal, totalDiscount, user });
+        res.render('checkOut', { addresses, cartItems, cartTotal, totalDiscount, user,finalOffer,cartCount,wishlistCount,walletBalance  });
 
     } catch (error) {
         console.error('Error loading checkout page:', error);
@@ -179,7 +203,8 @@ const getCartDetails = async (req, res) => {
         // Store coupon information in the session
         req.session.coupon = {
             name: coupon.name,
-            discount: discount
+            discount: discount,
+            originalTotal: cartTotal
         };
 
         res.json({ success: true, discount: discount,newTotal, message: 'Coupon applied successfully' });
@@ -189,10 +214,30 @@ const getCartDetails = async (req, res) => {
         return res.status(500).json({ success: false, message: 'An error occurred while applying the coupon' });
     }
 };
+const removeCoupon = (req, res) => {
+    try {
+        if (!req.session.coupon) {
+            return res.status(400).json({ success: false, message: 'No coupon applied' });
+        }
+
+        const originalTotal = req.session.coupon.originalTotal;
+        
+        // Clear the coupon from the session
+        delete req.session.coupon;
+
+        res.json({ success: true, originalTotal, message: 'Coupon removed successfully' });
+
+    } catch (error) {
+        console.error('Error removing coupon:', error);
+        return res.status(500).json({ success: false, message: 'An error occurred while removing the coupon' });
+    }
+};
+
 module.exports={
     updateAddress,
     loadCheckoutPage,
     getCartDetails,
-    applyCoupon
+    applyCoupon,
+    removeCoupon
     
 }

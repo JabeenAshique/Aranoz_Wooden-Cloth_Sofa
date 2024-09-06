@@ -6,12 +6,7 @@ const authMiddleware = (req, res, next) => {
         return res.redirect('/');
     }
 };
-// const ensureAuthenticated = (req, res, next) => {
-//   if (req.session.user && req.session.user._id) {
-//       return next();
-//   }
-//   res.status(401).send('Unauthorized: User not logged in');
-// };
+
 
 const ensureAuthenticated = (req, res, next) => {
     if (req.isAuthenticated() || (req.session && req.session.passport && req.session.passport.user)) {
@@ -20,7 +15,7 @@ const ensureAuthenticated = (req, res, next) => {
         req.user = req.session.user; // Set req.user from session data
         return next();
     } else {
-        res.status(401).send('Unauthorized: User not logged in');
+        return res.redirect('/Userlogin?message=Please log in to access this page.');
     }
   
 };

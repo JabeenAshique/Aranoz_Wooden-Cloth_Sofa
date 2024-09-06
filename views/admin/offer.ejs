@@ -152,12 +152,19 @@
                     <div class="form-group d-none" id="referralFields">
                       <label for="referredAmount">Amount for Referred Person</label>
                       <input type="number" class="form-control" id="referredAmount" name="referredAmount">
+                      <span id="referredAmountError" class="text-danger" style="display:none;">Referred amount must be a positive number.</span>
+
+
                       <label for="referrerAmount" class="mt-2">Amount for Referrer</label>
                       <input type="number" class="form-control" id="referrerAmount" name="referrerAmount">
+                      <span id="referrerAmountError" class="text-danger" style="display:none;">Referrer amount must be a positive number.</span>
+
                     </div>
                     <div class="form-group  d-none" id="offerAmountGroup">
                         <label for="offerAmount">offerAmount</label>
                         <input type="text" class="form-control" id="offerAmount" name="offerAmount" >
+                        <span id="offerAmountError" class="text-danger" style="display:none;">Offer amount must be a positive number.</span>
+
                       </div>
                     <div class="form-group">
                       <label for="startTime">Start Time</label>
@@ -236,14 +243,20 @@
           <div class="form-group d-none" id="editReferralFields">
             <label for="editReferredAmount">Amount for Referred Person</label>
             <input type="number" class="form-control" id="editReferredAmount" name="referredAmount">
+            <span id="referredAmountError" class="text-danger" style="display:none;">Referred amount must be a positive number.</span>
+
             <label for="editReferrerAmount" class="mt-2">Amount for Referrer</label>
             <input type="number" class="form-control" id="editReferrerAmount" name="referrerAmount">
+            <span id="referrerAmountError" class="text-danger" style="display:none;">Referrer amount must be a positive number.</span>
+
           </div>
 
           <!-- Edit Offer Amount -->
           <div class="form-group d-none" id="editOfferAmountGroup">
             <label for="editOfferAmount">Offer Amount</label>
             <input type="text" class="form-control" id="editOfferAmount" name="offerAmount">
+            <span id="offerAmountError" class="text-danger" style="display:none;">Offer amount must be a positive number.</span>
+
           </div>
 
           <div class="form-group">
@@ -353,12 +366,48 @@
       }
   });
   
-  // Handle form submission
+  //validation
+  function validateAmount(inputId, errorElementId) {
+    const value = parseFloat(document.getElementById(inputId).value);
+    const errorElement = document.getElementById(errorElementId);
+
+    if (isNaN(value) || value < 0) {
+        errorElement.style.display = 'block';
+        return false;
+    } else {
+        errorElement.style.display = 'none';
+        return true;
+    }
+}
   document.getElementById('createOfferForm').addEventListener('submit', function(event) {
-      event.preventDefault(); // Prevent default form submission
-  
-      const formData = new FormData(this);
-      const offerId = formData.get('id');
+    event.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(this);
+
+    // Validate the offer amount based on the offer type
+    const offerType = formData.get('offerType');
+    let isValid = true;
+
+    if (offerType === 'category' || offerType === 'product') {
+        const offerAmount = parseFloat(formData.get('offerAmount'));
+        if (isNaN(offerAmount) || offerAmount < 0) {
+            isValid = false;
+            alert('Offer amount must be a positive number.');
+        }
+    }
+
+    if (offerType === 'referral') {
+        const referredAmount = parseFloat(formData.get('referredAmount'));
+        const referrerAmount = parseFloat(formData.get('referrerAmount'));
+        if (isNaN(referredAmount) || referredAmount < 0 || isNaN(referrerAmount) || referrerAmount < 0) {
+            isValid = false;
+            alert('Referred and referrer amounts must be positive numbers.');
+        }
+    }
+
+    if (!isValid) {
+        return; // Stop form submission if validation fails
+    }
       
       // Convert FormData to a plain object for easy handling
       const offerData = {

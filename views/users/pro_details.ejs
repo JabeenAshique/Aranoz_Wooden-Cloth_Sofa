@@ -53,6 +53,17 @@
 .small-image:hover {
     transform: scale(1.1);
 }
+@keyframes blink {
+    0% { opacity: 1; color: red; }
+    50% { opacity: 0; color: red; }
+    100% { opacity: 1; color: red; }
+}
+
+.blinking-text {
+    animation: blink 1s infinite;
+    font-weight: bold; /* Optional: to make the text stand out more */
+}
+
 </style>
 </head>
 
@@ -100,14 +111,16 @@
             <div class="s_product_text">
                 <h5>previous <span>|</span> next</h5>
                 <h3><%= product.productName %></h3>
-                <h2><%= product.salePrice %>
-                <% if (product.productOffer > 0) { %>
-                  <p>Offer: <%= product.productOffer %>% off</p>
-              <% } %>
+                 <h2><%= product.salePrice %> 
+                 <% if (finalOffer > 0) { %>
+                    <p class="blinking-text">Special Offer: <%= finalOffer %> Off</p>
+                <% } %>
             </h2>
-            <% if (finalOffer > 0) { %>
-                <p>Special Offer: <%= finalOffer %></p>
-            <% } %>
+                <!-- <% if (product.productOffer > 0) { %>
+                  <p>Offer: <%= product.productOffer %>% off</p>
+              <% } %>  -->
+            
+           
                 <ul class="list">
                     <li>
                         <a class="active" href="#">
@@ -226,11 +239,15 @@
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ productId, quantity })
-        })
-        .then(response => {
-            console.log('Response received:', response); // Debug log
-            return response.json();
-        })
+        }).then(response => {
+        if (response.redirected) {
+            // If the user is not authorized and the response is a redirect to the login page
+            window.location.href = response.url;
+            return; // Stop further processing
+        }
+
+        return response.json(); // This assumes the response is JSON if not redirected
+    })
         .then(data => {
         console.log('Data received:', data); // Debug log
         if (data.success) {
@@ -241,7 +258,12 @@
                 showConfirmButton: false,
                 timer: 1500
             }).then(() => {
-                window.location.href = '/cart'; // Redirect to cart page
+                // const cartCountElement = document.getElementById('cart-count');
+                // const currentCount = parseInt(cartCountElement.innerText);
+                // cartCountElement.innerText = currentCount + parseInt(quantity);
+                 const cartCountElement = document.getElementById('cart-count');
+            cartCountElement.innerText = data.cartCount || 0; // Set cart count from session
+                // window.location.reload()
             });
         } else {
             Swal.fire({

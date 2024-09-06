@@ -133,10 +133,13 @@
                     <div class="form-group">
                         <label for="offerPrice">Offer Price</label>
                         <input type="number" class="form-control" id="offerPrice" name="offerPrice" required>
+                        <span id="offerPriceError" class="text-danger" style="display:none;">Offer Price cannot be negative.</span>
                     </div>
                     <div class="form-group">
                         <label for="minimumPrice">Minimum Price</label>
                         <input type="number" class="form-control" id="minimumPrice" name="minimumPrice" required>
+                        <span id="minimumPriceError" class="text-danger" style="display:none;">Minimum Price cannot be negative.</span>
+
                     </div>
                 </form>
             </div>
@@ -251,36 +254,45 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
-  document.getElementById('search-input').addEventListener('input', function() {
+
+document.getElementById('search-input').addEventListener('input', function() {
     const searchQuery = this.value.trim();
 
     // Redirect to the search route with the search query as a URL parameter
     window.location.href = `/admin/coupon?search=${encodeURIComponent(searchQuery)}`;
 });
 
-    function createCoupon() {
-      alert('Button clicked!');
-      alert('Button clicked2!');
-
-    
-        const form = document.getElementById('createCouponForm');
-        const formData = new FormData(form);
-
-           // Log FormData contents
-    console.log("FormData entries:");
-    for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
+function validatePrice(price, errorElementId) {
+    const errorElement = document.getElementById(errorElementId);
+    if (price < 0) {
+        errorElement.style.display = 'block';
+        return false;
+    } else {
+        errorElement.style.display = 'none';
+        return true;
     }
-      // Convert FormData to a plain object
+}
+
+function createCoupon() {
+    const offerPrice = parseFloat(document.getElementById('offerPrice').value);
+    const minimumPrice = parseFloat(document.getElementById('minimumPrice').value);
+
+    const isOfferPriceValid = validatePrice(offerPrice, 'offerPriceError');
+    const isMinimumPriceValid = validatePrice(minimumPrice, 'minimumPriceError');
+
+    if (!isOfferPriceValid || !isMinimumPriceValid) {
+        return; // Prevent form submission if any value is invalid
+    }
+
+    const form = document.getElementById('createCouponForm');
+    const formData = new FormData(form);
+
     const couponData = {
         name: formData.get('name'),
         expireOn: formData.get('expireOn'),
         offerPrice: formData.get('offerPrice'),
         minimumPrice: formData.get('minimumPrice')
     };
-
-    console.log("Coupon Data:", couponData);
-
 
         fetch('/admin/coupon', {
             method: 'POST',

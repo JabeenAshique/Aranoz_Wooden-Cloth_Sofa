@@ -52,17 +52,22 @@ const fetchOrders = async (filter) => {
 };
 
 // Helper function to calculate summary data
-const calculateSummary = (orders) => {
-    let overallSales = 0;
+const calculateSummary = (orders) => { let overallSales = 0;
     let overallAmount = 0;
     let overallDiscount = 0;
 
     const salesDetails = orders.map(order => {
-        const totalDiscount = order.discount + order.couponDiscount;
+        let totalDiscount = order.discount; // Base discount (this may already include coupon discount)
+        
+        // Only add the coupon discount if it's not already part of the base discount
+        if (!order.discount || order.discount === 0) {
+            totalDiscount += order.couponDiscount;
+        }
+
         overallSales += 1;
         overallAmount += order.finalAmount;
         overallDiscount += totalDiscount;
-
+        
         return {
             date: order.createdOn.toDateString(),
             orderId: order.orderId,
@@ -174,7 +179,7 @@ exports.downloadPdfReport = async (req, res) => {
         const filter = applyFilter(period, startDate, endDate);
         const orders = await fetchOrders(filter);
 
-        const doc = new PDFDocument({ size: 'A4', margin: 40 });
+        const doc = new PDFDocument({ size: 'A4', margin: 30 });
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=sales_report.pdf');
@@ -190,15 +195,15 @@ exports.downloadPdfReport = async (req, res) => {
         doc.moveDown(0.5);
 
         const columnPositions = {
-            date: 40,
-            orderId: 100,
-            product: 200,
-            quantity: 330,
-            coupon: 380,
-            discount: 430,
-            total: 480
+            date: 40,       
+            orderId: 120,    
+            product: 240,   
+            quantity: 420,   
+            coupon: 480,     
+            discount: 540,   
+            total: 600       
         };
-
+        
         doc.fontSize(9).fillColor('#444444');
         doc.text('Date', columnPositions.date, undefined, { continued: true });
         doc.text('Order ID', columnPositions.orderId, undefined, { continued: true });
@@ -212,22 +217,37 @@ exports.downloadPdfReport = async (req, res) => {
         doc.moveDown(0.5);
 
         orders.forEach(order => {
+            // Slicing the order ID into two parts for better readability
             const orderIdPart1 = order.orderId.slice(0, order.orderId.length / 2);
             const orderIdPart2 = order.orderId.slice(order.orderId.length / 2);
-            const productNames = order.orderedItems.map(item => item.product.productName).join(', ');
-
-            doc.text(order.createdOn.toDateString(), columnPositions.date, undefined, { continued: true });
+            
+            // Format the order creation date and slice it into two parts
+            const orderDate = order.createdOn.toDateString(); // Convert date to string
+            const orderDatePart1 = orderDate.slice(0, orderDate.length / 2);
+            const orderDatePart2 = orderDate.slice(orderDate.length / 2);
+        
+            // Concatenate product names into a single string
+             // Split the product names into two parts to ensure they fit within the column
+            const productNames = order.orderedItems.map(item => {
+                const productName = item.product.productName;
+                const productNamePart1 = productName.slice(0, productName.length / 2);
+                const productNamePart2 = productName.slice(productName.length / 2);
+                return `${productNamePart1}\n${productNamePart2}`;
+            }).join(',\n'); // Join with comma and newline for each product
+        
+            // Adding the data to the PDF document
+            doc.text(`${orderDatePart1}\n${orderDatePart2}`, columnPositions.date, undefined, { continued: true });
             doc.text(`${orderIdPart1}\n${orderIdPart2}`, columnPositions.orderId, undefined, { continued: true });
-            doc.text(productNames, columnPositions.product, undefined, { continued: true });
+            doc.text(`${productNames}`, columnPositions.product, undefined, { continued: true });
             doc.text(order.orderedItems.reduce((acc, item) => acc + item.quantity, 0), columnPositions.quantity, undefined, { continued: true });
-            doc.text(order.couponCode || 'N/A', columnPositions.coupon, undefined, { continued: true });
+            // doc.text(order.couponCode || 'N/A', columnPositions.coupon, undefined, { continued: true });
             doc.text(`₹${order.discount + order.couponDiscount}`, columnPositions.discount, undefined, { continued: true });
             doc.text(`₹${order.finalAmount}`, columnPositions.total);
             doc.moveDown(0.5);
             doc.strokeColor('#aaaaaa').lineWidth(0.5).moveTo(columnPositions.date, doc.y).lineTo(columnPositions.total + 40, doc.y).stroke();
             doc.moveDown(0.5);
         });
-
+        
         doc.end();
     } catch (error) {
         console.error('Error generating PDF report:', error);

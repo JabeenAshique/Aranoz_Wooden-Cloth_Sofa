@@ -119,6 +119,17 @@
   <script src="js/price_rangs.js"></script>
   <!-- custom js -->
   <script src="js/custom.js"></script>
+  <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    fetch('/wishlist/count')
+        .then(response => response.json())
+        .then(data => {
+            const wishlistCountElement = document.getElementById('wishlist-count');
+            wishlistCountElement.innerText = data.wishlistCount || 0;
+        })
+        .catch(error => console.error('Error fetching wishlist count:', error));
+});
+  </script>
 </body>
 
 </html>

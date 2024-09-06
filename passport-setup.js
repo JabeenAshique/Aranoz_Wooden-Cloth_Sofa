@@ -1,42 +1,4 @@
-// const passport = require('passport');
-// const GoogleStrategy = require('passport-google-oauth20').Strategy;
-// const User = require('./models/userSchema'); // Adjust the path if necessary
 
-// passport.serializeUser((user, done) => {
-//     done(null, user.id);
-// });
-
-// passport.deserializeUser((id, done) => {
-//     User.findById(id).then((user) => {
-//         done(null, user);
-//     });
-// });
-
-// passport.use(new GoogleStrategy({
-//     clientID: process.env.GOOGLE_CLIENT_ID,
-//     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-//     callbackURL: 'http://localhost:3000/auth/google/callback'
-// }, (accessToken, refreshToken, profile, done) => {
-//     User.findOne({ googleId: profile.id }).then((existingUser) => {
-//         if (existingUser) {
-//             done(null, existingUser);
-//         } else {
-//             new User({
-//                 googleId: profile.id,
-//                 name: profile.displayName,
-//                 email: profile.emails[0].value
-//             }).save().then((user) => {
-//                 done(null, user);
-//             });
-//         }
-//     });
-// }));
-
-
-// config/passport.js
-// 
-
-// config/passport.js
 // passport-setup.js
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -58,6 +20,8 @@ passport.use(new GoogleStrategy({
           googleId: profile.id,
           name: profile.displayName,
           email: profile.emails[0].value,
+          cart: [], // Initialize an empty cart
+          wishlist: [] // Initialize an empty wishlist
         });
         await user.save();
         console.log('New user created:', user);
@@ -83,7 +47,7 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await User.findById(id);
+    const user = await User.findById(id).populate('cart').populate('wishlist');
     done(null, user);
   } catch (err) {
     done(err, null);

@@ -51,10 +51,16 @@ const userSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-  walletBalance: {
-    type: Number,
-    default: 0,
-  },
+  // walletBalance: {
+  //   type: Number,
+  //   default: 0,
+  // },
+  walletTransactions: [{
+    date: { type: Date, default: Date.now },
+    type: { type: String, enum: ['credit', 'debit','refund'] },
+    walletBalance: { type: Number },
+    description: { type: String }
+    }],
   referralCode: {
     type: String,
     // required : true
@@ -91,7 +97,7 @@ cart: [
       quantity: { type: Number, required: true, default: 1 }
        }
     ],
-
+wishlist: [{ type: Schema.Types.ObjectId, ref: 'Wishlist' }],
 profileImage: { type: String },
  // Add this field
 },{

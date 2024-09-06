@@ -24,6 +24,15 @@
     <link rel="stylesheet" href="css/slick.css">
     <!-- style CSS -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+    .form-control {
+    border-right: 0;
+}
+</style>
+</head>
+<body>
 </head>
 
 <body>
@@ -74,15 +83,7 @@
                 </div>
             </div>
         </div>
-        <div class="search_input" id="search_input_box">
-            <div class="container ">
-                <form class="d-flex justify-content-between search-inner">
-                    <input type="text" class="form-control" id="search_input" placeholder="Search Here">
-                    <button type="submit" class="btn"></button>
-                    <span class="ti-close" id="close_search" title="Close Search"></span>
-                </form>
-            </div>
-        </div>
+       
     </header>
     <!-- Header part end-->
     <!-- Header part end-->
@@ -115,15 +116,25 @@
                                     <div id="error1" class="error-message"></div>
                                 </div>
                                 
-
-                                <div class="col-md-12 form-group p_star">
-                                    <input type="password" class="form-control" name="password" id="password" placeholder="Password">
+                                <div class="input-group mb-3">
+                                    <input type="password" class="form-control" name="password" id="password" placeholder="Password" required>
+                                    <div class="input-group-append">
+                                      <span class="input-group-text bg-white border-left-0" onclick="togglePasswordVisibility()" style="cursor: pointer;">
+                                        <i class="bi bi-eye-slash" id="toggle-password-icon"></i>
+                                      </span>
+                                    </div>
                                     <div id="error2" class="error-message"></div>
-                                </div>
+                                  </div>
+                                  
+                                   
+                                
                                 
                                 <%if(locals.message && message.length>0){%>
-                                    <div class="alert alert-danger text-center">
-                                      <%=message%>
+                                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                        <%= message %>
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
                                     </div>
                                     <%}%>
                                     <a href="/email_verification">ForgotPassword</a>
@@ -226,6 +237,20 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
             }
           });
         });
+        function togglePasswordVisibility() {
+    const passwordField = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggle-password-icon');
+    
+    if (passwordField.type === 'password') {
+      passwordField.type = 'text';
+      toggleIcon.classList.remove('bi-eye-slash');
+      toggleIcon.classList.add('bi-eye');
+    } else {
+      passwordField.type = 'password';
+      toggleIcon.classList.remove('bi-eye');
+      toggleIcon.classList.add('bi-eye-slash');
+    }
+  }
       </script>
     <script src="js/jquery-1.12.1.min.js"></script>
     <!-- popper js -->
@@ -252,6 +277,10 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
     <script src="js/mail-script.js"></script>
     <script src="js/stellar.js"></script>
     <script src="js/price_rangs.js"></script>
+    <!-- Include Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!-- custom js -->
     <script src="js/custom.js"></script>
 </body>

@@ -58,7 +58,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <h2>Category Management</h2>
-                    <!-- Add/Edit Category Form -->
+                   
                     <form id="category-form" action="<%= editCategory ? '/admin/category/edit/' + editCategory._id : '/admin/category/add' %>" method="POST" onsubmit="return validateForm()">
                         <div class="mb-3">
                             <label for="name" class="form-label">Category Name</label>
@@ -80,7 +80,7 @@
                         <button type="submit" class="btn btn-primary"><%= editCategory ? 'Update Category' : 'Add Category' %></button>
                     </form>
 
-                    <!-- Categories List -->
+                    Categories List
                     <h3 class="mt-5">Categories</h3>
                     <table class="table table-striped">
                         <thead>
@@ -108,7 +108,7 @@
                                 </tr>
                             <% }); %>
                         </tbody>
-                    </table>
+                    </table> 
                      <!-- Pagination Controls -->
                      <nav aria-label="Page navigation">
                         <ul class="pagination justify-content-center">
@@ -177,10 +177,22 @@
         } else {
           offerError.style.display = 'none';
         }
+// Validate for duplicate category names (case insensitive)
+const categories = JSON.stringify(categories.map(cat => cat.name.toLowerCase())) ;
+    const currentName = nameInput.value.trim().toLowerCase();
+    if (categories.includes(currentName)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Category name already exists.'
+        });
+        isValid = false;
+    }
 
-        return isValid;
-      }
+    return isValid;
+}
+
     </script>
 
 </body>
-</html>
+</html> -->

@@ -12,21 +12,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// const upload = multer({
-//     storage: storage,
-//     limits: { fileSize: 1000000 }, // 1 MB limit
-//     fileFilter: (req, file, cb) => {
-//         const filetypes = /jpeg|jpg|png|gif/;
-//         const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-//         const mimetype = filetypes.test(file.mimetype);
-
-//         if (mimetype && extname) {
-//             return cb(null, true);
-//         } else {
-//             cb('Error: Images Only!');
-//         }
-//     }
-// }).array('productImage', 3); // Allow up to 3 images
 const upload = multer({
     storage: storage,
     limits: { fileSize: 1000000 }, // 1 MB limit
@@ -45,7 +30,21 @@ const upload = multer({
     }
 }).array('productImage', 3);
 
-
+exports.uploadCroppedImage = (req, res) => {
+    upload(req, res, (err) => {
+        if (err) {
+            console.error('Error uploading cropped image:', err);
+            return res.status(500).json({ error: 'Error uploading cropped image' });
+        } else {
+            const file = req.file;
+            if (!file) {
+                return res.status(400).json({ error: 'No file uploaded' });
+            }
+            // Send the path of the uploaded image back to the client for preview
+            return res.status(200).json({ filePath: '/uploads/' + file.filename });
+        }
+    });
+};
 exports.addProduct = (req, res) => {
     upload(req, res, async (err) => {
         if (err) {
@@ -58,7 +57,11 @@ exports.addProduct = (req, res) => {
                 if (!req.files || req.files.length === 0) {
                     return res.redirect('/admin/product?error=No images uploaded');
                 }
-
+                 // Validate for duplicate product name (case insensitive)
+                 const existingProduct = await Product.findOne({ productName: new RegExp(`^${productName}$`, 'i') });
+                 if (existingProduct) {
+                     return res.redirect('/admin/product?error=Product name already exists');
+                 }
                 const productImages = req.files.map(file => '/uploads/' + file.filename);
 
                 const newProduct = new Product({
@@ -84,37 +87,6 @@ exports.addProduct = (req, res) => {
 };
 
 
-// exports.editProduct = (req, res) => {
-//     upload(req, res, async (err) => {
-//         if (err) {
-//             console.error('Error uploading files:', err);
-//             return res.redirect('/admin/product?error=Error uploading files');
-//         } else {
-//             try {
-//                 const { productName, description, category, regularPrice, salePrice, productOffer, quantity } = req.body;
-
-//                 const productImages = req.files.length ? req.files.map(file => '/uploads/' + file.filename) : undefined;
-
-//                 const product = await Product.findById(req.params.id);
-
-//                 product.productName = productName;
-//                 product.description = description;
-//                 product.category = category;
-//                 product.regularPrice = regularPrice;
-//                 product.salePrice = salePrice;
-//                 product.productOffer = productOffer;
-//                 product.quantity = quantity;
-//                 if (productImages) product.productImage.push(...productImages);
-
-//                 await product.save();
-//                 return res.redirect('/admin/product?success=Product updated successfully');
-//             } catch (error) {
-//                 console.error('Error editing product:', error);
-//                 return res.redirect('/admin/product?error=Error editing product');
-//             }
-//         }
-//     });
-// };
 exports.editProduct =async (req, res) => {
     upload(req, res, async (err) => {
         if (err) {
@@ -185,24 +157,7 @@ exports.uploadImage = (req, res) => {
         }
     });
 };
-// exports.removeProductImage = async (req, res) => {
-//     try {
-//         const { productId, index } = req.body;
-//         const product = await Product.findById(productId);
 
-//         if (!product) {
-//             return res.status(404).send('Product not found');
-//         }
-
-//         product.productImage.splice(index, 1); // Remove the image from the array
-//         await product.save();
-
-//         res.status(200).send('Image removed successfully');
-//     } catch (error) {
-//         console.error('Error removing image:', error);
-//         res.status(500).send('Error removing image');
-//     }
-// };
 exports.getProductPage = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -216,7 +171,7 @@ exports.getProductPage = async (req, res) => {
         const products = await Product.find().populate('category').skip((page - 1) * limit)
         .limit(limit)
         .exec();
-        const count = await Category.countDocuments();
+        const count = await Product.countDocuments();
         const totalPages = Math.ceil(count / limit);
         res.render('product', { products,currentPage:page, totalPages });
     } catch (error) {
@@ -237,10 +192,6 @@ exports.getAddEditProductPage = async (req, res) => {
         res.redirect('/admin/product');
     }
 };
-
-
-
-
 exports.toggleProductStatus = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
@@ -255,26 +206,6 @@ exports.toggleProductStatus = async (req, res) => {
     }
 };
 
-
-
-// exports.removeProductImage = async (req, res) => {
-//     try {
-//         const { productId, index } = req.body;
-//         const product = await Product.findById(productId);
-
-//         if (!product) {
-//             return res.status(404).send('Product not found');
-//         }
-
-//         product.productImage.splice(index, 1); // Remove the image from the array
-//         await product.save();
-
-//         res.status(200).send('Image removed successfully');
-//     } catch (error) {
-//         console.error('Error removing image:', error);
-//         res.status(500).send('Error removing image');
-//     }
-// };
 exports.removeProductImage = async (req, res) => {
     try {
         const { productId, index } = req.params;
@@ -299,4 +230,3 @@ exports.removeProductImage = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
-

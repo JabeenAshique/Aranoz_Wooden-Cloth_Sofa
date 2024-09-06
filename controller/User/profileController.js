@@ -22,18 +22,25 @@ const loadProfilePage = async (req, res) => {
         if (!req.user || !req.user._id) {
             return res.status(401).send('Unauthorized: User not logged in');
         }
-
+        const wishlistCount = req.session.wishlistCount || 0;
+        const cartCount = req.session.cartCount || 0;
         const userId = req.user._id;
         const currentDate = new Date();
         console.log(currentDate)
 
-        console.log('User ID:', userId); // Log user ID
+        const user = await User.findById(req.user._id).populate('walletTransactions').exec();
+        const walletTransactions = user.walletTransactions;
+    
+        let walletBalance = 0;
+        if (walletTransactions.length > 0) {
+        walletBalance = walletTransactions[walletTransactions.length - 1].walletBalance;
+        }
 
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).send('Invalid User ID');
         }
 
-        const user = await User.findById(userId);
+       // const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).send('User not found');
@@ -56,7 +63,7 @@ const loadProfilePage = async (req, res) => {
         console.log('Addresses found:', addresses); // Log address data
         console.log('Show Referral Code:', showReferralCode); // Log the decision on showing the referral code
 
-        res.render('profile', { user, addresses, showReferralCode });
+        res.render('profile', { user, addresses, showReferralCode,cartCount,wishlistCount,walletBalance });
     } catch (error) {
         console.error('Error fetching user details:', error);
         res.status(500).send('Server Error');
@@ -71,9 +78,11 @@ const loadUpdateProfilePage=async(req,res)=>{
     try{
         const userId = req.user._id;
         const user = await User.findById(userId);
+        const cartCount = req.session.cartCount || 0;
+        const wishlistCount = req.session.wishlistCount || 0;
         // Fetch the addresses for the user
         const addresses = await Address.find({ userId });
-        res.render("updateProfile",{user,addresses})
+        res.render("updateProfile",{user,addresses,cartCount,wishlistCount})
     }
     catch(error){
         console.error("Error fetching user details ")
@@ -103,6 +112,8 @@ const loadgetAddressPage = async(req,res)=>{
             return res.status(401).send('Unauthorized: User not logged in');
         }
         const userId = req.user._id;
+        const cartCount = req.session.cartCount || 0;
+        const wishlistCount = req.session.wishlistCount || 0;
         // const userId = req.session.user._id;
 
         if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -111,7 +122,7 @@ const loadgetAddressPage = async(req,res)=>{
 
         const addresses = await Address.find({  userId });
 
-        res.render('getAddress', { addresses });
+        res.render('getAddress', { addresses,cartCount,wishlistCount });
     } catch (error) {
         console.error('Error fetching addresses:', error);
         res.status(500).send('Server Error');
@@ -119,7 +130,9 @@ const loadgetAddressPage = async(req,res)=>{
 };
 const loadAddAddressPage = async(req,res)=>{
     try{
-        res.render("addAddress")
+        const cartCount = req.session.cartCount || 0;
+        const wishlistCount = req.session.wishlistCount || 0;
+        res.render("addAddress",{cartCount,wishlistCount})
     
     }
     catch(error){
@@ -150,14 +163,7 @@ const saveAddress = async (req, res) => {
         return res.redirect('/getAddress?error=An error occurred while saving the address');
     }
    
-//     const redirectUrl = req.query.redirect || '/getAddress';
-//     return res.redirect(`${redirectUrl}?success=Address added successfully`);
-// } catch (error) {
-//     console.log('Error saving address:', error);
 
-//     const redirectUrl = req.query.redirect || '/getAddress';
-//     return res.redirect(`${redirectUrl}?error=An error occurred while saving the address`);
-// }
 };
 
 const loadEditAddressPage = async (req, res) => {
@@ -279,6 +285,23 @@ const resetPassword = async (req, res) => {
         res.status(500).json({ success: false, message: 'An error occurred. Please try again.' });
     }
 };
+
+const walletTransactions=async (req, res) => {
+    try {
+      const cartCount = req.session.cartCount || 0;
+      const wishlistCount = req.session.wishlistCount || 0;
+      const user = await User.findById(req.user._id).populate('walletTransactions').exec();
+      const walletTransactions = user.walletTransactions;
+  
+      res.render('wallet-history', { walletTransactions,cartCount,wishlistCount });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Server Error');
+    }
+  }
+  
+
+  
 module.exports = { 
     loadProfilePage,
     loadUpdateProfilePage,
@@ -289,5 +312,6 @@ module.exports = {
     loadEditAddressPage,
     updateAddress,
     deleteAddress,
-    resetPassword
+    resetPassword,
+    walletTransactions
 };

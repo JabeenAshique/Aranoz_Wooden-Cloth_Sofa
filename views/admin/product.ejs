@@ -11,7 +11,8 @@
     <link rel="stylesheet" href="/css/dashboard.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
-    
+
+
     <style>
       .navbar.bg-light {
         background-color: #569c79 !important;
@@ -109,7 +110,8 @@
                                     </td>
                                     <td><%= product.productName %></td>
                                     <td><%= product.description %></td>
-                                    <td><%= product.category.name %></td>
+                                    <td><%= product.category ? product.category.name : 'No Category' %></td>
+
                                     <td><%= product.regularPrice %></td>
                                     <td><%= product.salePrice %></td>
                                     <td><%= product.productOffer %></td>
@@ -127,15 +129,43 @@
                         </tbody>
                         </table>
                         <!-- Pagination Controls -->
-<nav aria-label="Page navigation">
-  <ul class="pagination justify-content-center">
-    <% for(let i = 1; i <= totalPages; i++) { %>
-      <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-      </li>
-    <% } %>
-  </ul>
-</nav>  
+                        <!-- <nav aria-label="Page navigation">
+                          <ul class="pagination justify-content-center">
+                            <% for(let i = 1; i <= totalPages; i++) { %>
+                              <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                              </li>
+                            <% } %>
+                          </ul>
+                        </nav>   -->
+                <!-- Pagination Controls -->
+                 <!-- Pagination -->
+                 <nav aria-label="Page navigation">
+                  <ul class="pagination justify-content-center">
+                    <!-- Previous Button -->
+                    <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                      <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                      </a>
+                    </li>
+                
+                    <!-- Page Numbers -->
+                    <% for(let i = 1; i <= totalPages; i++) { %>
+                      <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                      </li>
+                    <% } %>
+                
+                    <!-- Next Button -->
+                    <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                      <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+                
+
                 <div class="toast-container position-fixed p-3 bottom-0" style="top: 600px; right: 0; z-index: 1055;">
                   <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
                       <div class="toast-body" id="toast-body">

@@ -179,13 +179,13 @@
                                             <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
                                         </select> -->
                                         <form id="statusForm" action="/admin/order/<%= order._id %>/status" method="POST">
-                                            <select name="status" class="form-select" <%= (order.status === 'Delivered' || order.status === 'Cancelled') ? 'disabled' : '' %>>
+                                            <select name="status" class="form-select" <%= (order.status === 'Delivered' || order.status === 'Cancelled'|| order.status === 'Returned') ? 'disabled' : '' %>>
                                                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                                                 <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                                                 <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                                                 <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
                                             </select>
-                                            <button type="submit" class="btn btn-primary mt-2" <%= (order.status === 'Delivered' || order.status === 'Cancelled') ? 'disabled' : '' %>>Update Status</button>
+                                            <button type="submit" class="btn btn-primary mt-2" <%= (order.status === 'Delivered' || order.status === 'Cancelled' || order.status === 'Returned') ? 'disabled' : '' %>>Update Status</button>
                                         </form>
                                         
                                 </div>

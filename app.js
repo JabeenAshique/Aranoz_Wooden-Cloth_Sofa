@@ -38,7 +38,11 @@ app.use(session({
         maxAge: 72 * 60 * 60 * 1000
     }
 }));
-
+// Log session data for debugging
+app.use((req, res, next) => {
+    console.log('Session data:', req.session);
+    next();
+});
 app.use(flash());
 
 

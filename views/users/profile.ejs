@@ -121,7 +121,10 @@ a{
                 </div>
                 
                 <div class="media-body">
-                  <h3>  Wallet Balance: ₹<%= user.walletBalance %></h3>
+                  <h3>Wallet Balance: ₹<%= walletBalance %></h3>
+                  <br>
+                  <a href='/wallet-history' style="color: #007bff; text-decoration: underline;">View Wallet History</a>
+                  <br>
                   <br>
                   <% if (showReferralCode) { %>
                     <h3>Referral Code: <%= user.referralCode %></h3>

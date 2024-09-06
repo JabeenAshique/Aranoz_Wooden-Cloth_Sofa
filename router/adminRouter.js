@@ -39,6 +39,8 @@ router.post("/product/toggle/:id", authMiddlewares.isAdmin,productController.tog
 // router.post("/product/remove-image", productController.removeProductImage);
 router.post('/product/:productId/image/:index',authMiddlewares.isAdmin, productController.removeProductImage);
 router.post("/product/upload-image",authMiddlewares.isAdmin, productController.uploadImage); // Add this line
+router.post('/product/upload-cropped-image', authMiddlewares.isAdmin, productController.uploadCroppedImage);
+
 
 
 //Cutomer

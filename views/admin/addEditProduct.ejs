@@ -109,12 +109,25 @@
                         <input type="number" class="form-control" id="quantity" name="quantity" value="<%= product ? product.quantity : '' %>" min="1" required>
                         <div class="invalid-feedback">Quantity must be at least 1.</div>
                     </div>
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                       <label for="productImage">Product Images</label>
                       <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" multiple>
                       <div class="invalid-feedback">Product images are required.</div>
                       <div id="new-image-container"></div>
-                  </div>
+                  </div> -->
+                  <div class="form-group">
+                    <label for="productImage">Product Images</label>
+                    <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" multiple>
+                    <div class="invalid-feedback">Product images are required.</div>
+                    <div id="crop-container" style="display: none;">
+                        <img id="image-to-crop" src="" alt="Image to crop" style="max-width: 100%;">
+                        <div>
+                            <button type="button" id="cropImageBtn" class="btn btn-primary">Crop Image</button>
+                        </div>
+                    </div>
+                    <div id="new-image-container"></div>
+                </div>
+                
                   <% if (product && product.productImage && product.productImage.length > 0) { %>
                       <input type="hidden" id="removedImages" name="removedImages" value="">
                       <div id="image-container">
@@ -207,32 +220,59 @@
             });
         });
 
-        document.getElementById('productImage').addEventListener('change', function(event) {
-            const files = event.target.files;
-            const container = document.getElementById('new-image-container');
-            container.innerHTML = '';
-            Array.from(files).forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const div = document.createElement('div');
-                    div.classList.add('img-thumbnail-wrapper');
-                    div.innerHTML = `
-                        <img src="${e.target.result}" alt="Product Image" class="img-thumbnail" style="width: 150px; height: auto;">
-                        <button type="button" class="btn btn-danger btn-sm remove-new-image" data-index="${index}">Remove</button>
-                    `;
-                    container.appendChild(div);
-                }
-                reader.readAsDataURL(file);
-            });
-        });
+        let cropper;
+const imageInput = document.getElementById('productImage');
+const cropContainer = document.getElementById('crop-container');
+const imageToCrop = document.getElementById('image-to-crop');
+const newImageContainer = document.getElementById('new-image-container');
 
-        document.addEventListener('click', function(event) {
-            if (event.target.classList.contains('remove-new-image')) {
-                const index = event.target.dataset.index;
-                event.target.parentElement.remove();
+imageInput.addEventListener('change', function(event) {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imageToCrop.src = e.target.result;
+            cropContainer.style.display = 'block';
+
+            // Initialize Cropper.js
+            if (cropper) {
+                cropper.destroy();
             }
-        });
+            cropper = new Cropper(imageToCrop, {
+                aspectRatio: 1, // Set this to whatever aspect ratio you need
+                viewMode: 1,
+                preview: '.img-preview'
+            });
+        }
+        reader.readAsDataURL(files[0]);
+    }
+});
+      });
+document.getElementById('cropImageBtn').addEventListener('click', function() {
+    const canvas = cropper.getCroppedCanvas({
+        width: 150, // Specify the dimensions for the cropped image
+        height: 150
     });
+
+    // Convert the cropped canvas to a Blob and append it to FormData
+    canvas.toBlob(function(blob) {
+        const newImage = URL.createObjectURL(blob);
+        const div = document.createElement('div');
+        div.classList.add('img-thumbnail-wrapper');
+        div.innerHTML = `
+            <img src="${newImage}" alt="Cropped Image" class="img-thumbnail" style="width: 150px; height: auto;">
+            <button type="button" class="btn btn-danger btn-sm remove-new-image">Remove</button>
+        `;
+        newImageContainer.appendChild(div);
+        
+        // Add the cropped image to FormData to upload it later
+        const formData = new FormData();
+        formData.append('croppedImage', blob, 'cropped-image.png');
+
+        // Now you can use formData in your form submission
+    }, 'image/png');
+});
+
 </script>
 </script>
 

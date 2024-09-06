@@ -9,8 +9,15 @@ const env = require("dotenv").config();
 const bcrypt = require('bcrypt');
 const loadHomepage = async (req, res) => {
     try {
+        const cartCount = req.session.cartCount || 0;
         const products = await Product.find({ isBlocked: false }).exec(); // Ensure to fetch only non-blocked products
-        res.render('home', { products, user: req.session.user  });
+        const categories = await Category.find().limit(4).exec();
+        const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
+            const product = await Product.findOne({ category: category._id, isBlocked: false }).exec();
+            return { category, product };
+        }));
+
+        res.render('home', { products, user: req.session.user,cartCount,categoriesWithProducts });
     } catch (error) {
         console.error('Error fetching products:', error);
         res.status(500).send('Server Error');
@@ -27,8 +34,9 @@ const loadsignup = async (req, res) => {
 };
 const loadLoginpage = async (req, res) => {
     try {
+        const cartCount = req.session.cartCount || 0;
         const message = req.query.message || '';
-        res.render('Userlogin', { message }); 
+        res.render('Userlogin', { message,cartCount }); 
         
        
     } catch (error) {
@@ -43,6 +51,9 @@ const getProductDetails = async (req, res) => {
         const productId = req.params.id;
         const currentDate = new Date();
         const product = await Product.findById(productId).populate("category");
+        // Assuming you are using session to store cartCount
+        const cartCount = req.session.cartCount || 0;
+        const wishlistCount = req.session.wishlistCount || 0;
         if (!product) {
             return res.status(404).send("Product not found");
         }
@@ -85,7 +96,7 @@ console.log("Max Product Offer:", maxProductOffer);
         if (product.isBlocked) {
             res.render("pro_details", { product: null, relatedProducts, message: "This product is unavailable." });
         } else {
-            res.render("pro_details", { product, relatedProducts, message: null,finalOffer });
+            res.render("pro_details", { product, relatedProducts, message: null,finalOffer,cartCount,wishlistCount });
         }
         // res.render("pro_details", { product, relatedProducts });
     } catch (error) {
@@ -123,7 +134,19 @@ const login = async (req, res) => {
 
         console.log("User authenticated successfully.");
         req.session.user = { _id: user._id }; // Set session
-        console.log('User logged in:', req.session.user); // Log session data
+        
+        // Calculate the cart count based on the user's cart
+        //req.session.cartCount = user.cart.reduce((total, item) => total + item.quantity, 0);
+        req.session.cartCount = user.cart.length;
+        
+        // Fetch the user's wishlist and calculate the count
+        const wishlist = await Wishlist.findOne({ userId: user._id });
+        req.session.wishlistCount = wishlist ? wishlist.products.length : 0;
+
+        // req.session.cartCount = user.cart.length;
+
+        console.log('Session data:', req.session);
+
         res.redirect("/home1");
     } catch (error) {
         console.error("Login error:", error);
@@ -150,6 +173,8 @@ const logout = (req, res) => {
 
 const loadShopPage = async (req, res) => {
     try {
+        const cartCount = req.session.cartCount || 0;
+        const wishlistCount = req.session.wishlistCount || 0;
         const page = parseInt(req.query.page) || 1;
         const limit = 9; // Adjust the limit as per  requirement
         const sortOption = req.query.sort || 'default';
@@ -194,18 +219,26 @@ const loadShopPage = async (req, res) => {
          const productQuery = {
             ...categoryQuery,
             productName: { $regex: searchQuery, $options: 'i' }, // Case-insensitive search
-            salePrice: { $gte: minPrice, $lte: maxPrice } // Apply price range filter
+            salePrice: { $gte: minPrice, $lte: maxPrice }
+ // Apply price range filter
         };
 
         const products = await Product.find(productQuery)
             .sort(sortCriteria)
             .skip((page - 1) * limit)
             .limit(limit)
+            .populate({
+                path: 'category',
+                match: { isBlocked: true }
+            })
             .exec();
+            
 
         const count = await Product.countDocuments(productQuery);
         const totalPages = Math.ceil(count / limit);
-        const categories = await Category.find();
+        const categories = await Category.find({isListed:true});
+       
+        
          // Retrieve the user's wishlist
          let wishlistItems = [];
          if (req.user) {
@@ -224,27 +257,21 @@ const loadShopPage = async (req, res) => {
             searchQuery,
             minPrice,
             maxPrice,
-            wishlistItems
+            wishlistItems,
+            cartCount,
+            wishlistCount,
+            
         });
     } catch (error) {
         console.error("Error fetching products:", error);
         res.status(500).send("Server Error");
     }
 };
-// const loadMainPage= async(req,res)=>{
-//     try {
-//         const products = await Product.find({ isBlocked: false }).exec(); 
-//         const categories= await Category.find({isListed:false}).limit(4).exec();;// Ensure to fetch only non-blocked products
-//         res.render('home1', { products,categories });
-//     } catch (error) {
-//         console.error('Error fetching products:', error);
-//         res.status(500).send('Server Error');
-//     }
 
-// }
 const loadMainPage = async (req, res) => {
     try {
-        
+        const cartCount = req.session.cartCount || 0;
+        const wishlistCount = req.session.wishlistCount || 0;
         const categories = await Category.find().limit(4).exec();
         const products = await Product.find({ isBlocked: false }).exec(); 
         const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
@@ -253,7 +280,7 @@ const loadMainPage = async (req, res) => {
         }));
 
         // Render the page with the categories and their products
-        res.render('home1', { categoriesWithProducts,products });
+        res.render('home1', { categoriesWithProducts,products,cartCount,wishlistCount });
     } catch (error) {
         console.error('Error fetching categories and products:', error);
         res.status(500).send('Server Error');
@@ -294,57 +321,6 @@ try {
 }
 }
 
-// const signup= async(req,res)=>{
-//     try {
-//      const {name,email,phone, password, cPassword,referralCode }=req.body
-//      if(password!==cPassword){
-//          return res.render("signup",{message:"Password do not match"})
-//      }
- 
-//      const findUser= await User.findOne({email})
-//      if(findUser){
-//          return res.render("signup",{message:"User with this email already exists"})
-//      }
-//       // Generate a referral code based on the user's name
-//       const namePart = name.substring(0, 3).toUpperCase();
-//       const randomPart = Math.floor(100 + Math.random() * 900).toString(); // Generate a random 3-digit number
-//       const userReferralCode = `${namePart}${randomPart}`;
-
-//       let walletBalance = 0;
-
-//       // Check if the referral code provided is valid
-//       if (referralCode) {
-//           const referrer = await User.findOne({ referralCode });
-
-//           if (referrer) {
-//               // Add ₹100 to the referrer's wallet
-//               referrer.walletBalance += 100;
-//               await referrer.save();
-
-//               // Add ₹20 to the new user's wallet
-//               walletBalance += 20;
-//           } else {
-//               return res.render("signup", { message: "Invalid referral code" });
-//           }
-//       }
-//      const otp=generateOtp()
-
-//      const emailSend= await sendVerificationEmail(email,otp)
-//      if(!emailSend){
-//          return res.json("email-error")
-//      }
- 
-//      req.session.userOtp=otp
-//      req.session.userData={name,email,phone,password}
- 
-//      res.render("verify-otp")
-//      console.log("OTP sent",otp)
-//     } catch (error) {
-//      console.error("signup error",error)
-//      res.render("/pageNotFound")
-//     }
-//  }
- 
 const signup = async (req, res) => {
     try {
         const { name, email, phone, password, cPassword, referralCode } = req.body;
@@ -366,22 +342,50 @@ const signup = async (req, res) => {
         const userReferralCode = `${namePart}${randomPart}`;
 
         let walletBalance = 0;
+        let walletTransactions = [];
+        let referredAmount = 0;
 
+       
         // Check if the referral code provided is valid
         if (referralCode) {
             const referrer = await User.findOne({ referralCode });
 
             if (referrer) {
                 // Fetch the referral offer from the Offer schema
-                const referralOffer = await Offer.findOne({ offerType: "referral", startDate: { $lte: new Date() }, endDate: { $gte: new Date() } });
+                const referralOffer = await Offer.findOne({
+                    offerType: "referral",
+                    startDate: { $lte: new Date() },
+                    endDate: { $gte: new Date() }
+                });
 
                 if (referralOffer) {
-                    // Add the amount defined in the offer to the referrer's wallet
-                    referrer.walletBalance += referralOffer.referrerAmount || 100; // Default to ₹100 if not specified
+                    // Calculate the new wallet balance for the referrer
+                    const latestReferrerTransaction = referrer.walletTransactions.length > 0
+                        ? referrer.walletTransactions[referrer.walletTransactions.length - 1].walletBalance
+                        : 0;
+                    const referrerNewBalance = latestReferrerTransaction + (referralOffer.referrerAmount );
+
+                    // Create a new transaction for the referrer
+                    referrer.walletTransactions.push({
+                        type: 'credit',
+                        amount: referralOffer.referrerAmount || 100,
+                        walletBalance: referrerNewBalance,
+                        description: `Referral bonus for referring ${name}`
+                    });
+
                     await referrer.save();
 
                     // Add the amount defined in the offer to the new user's wallet
-                    walletBalance += referralOffer.referredAmount || 20; // Default to ₹20 if not specified
+                    referredAmount =referralOffer.referredAmount
+                    walletBalance += referredAmount 
+
+                    // Add the new user's initial transaction
+                    walletTransactions.push({
+                        type: 'credit',
+                        amount: referralOffer.referredAmount || 0,
+                        walletBalance: walletBalance,
+                        description: 'Referral bonus for signing up'
+                    });
                 } else {
                     return res.render("signup", { message: "No active referral offer available" });
                 }
@@ -389,6 +393,7 @@ const signup = async (req, res) => {
                 return res.render("signup", { message: "Invalid referral code" });
             }
         }
+
 
         // Generate OTP for email verification
         const otp = generateOtp();
@@ -406,7 +411,7 @@ const signup = async (req, res) => {
             email,
             phone,
             password,
-            walletBalance, // Store the wallet balance to be added to the user during OTP verification
+            walletTransactions, // Store the initial wallet transactions for the new user
             referralCode: userReferralCode // Store the generated referral code
         };
 
@@ -443,7 +448,7 @@ const verifyOtp = async (req, res) => {
                 email:user.email,
                 phone:user.phone,
                 password:passwordHash,
-                walletBalance: user.walletBalance,
+                walletTransactions: user.walletTransactions,
                 referralCode: user.referralCode
             })
 
@@ -487,7 +492,8 @@ const resendOtp=async(req,res)=>{
 
 const loadOtpPage = async (req, res) => {
     try {
-        res.render('verify-otp', { message: "" });
+        const cartCount = req.session.cartCount || 0;
+        res.render('verify-otp', { message: "" ,cartCount});
     } catch (error) {
         console.log("OTP verification page is not loading", error);
         res.status(500).send("server.error");

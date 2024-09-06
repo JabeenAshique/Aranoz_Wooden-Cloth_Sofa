@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <!-- Required meta tags -->
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+ <title>aranoz</title>
+ <link rel="icon" href="img/favicon.png">
+ <!-- Bootstrap CSS -->
+ <link rel="stylesheet" href="css/bootstrap.min.css">
+ <!-- animate CSS -->
+ <link rel="stylesheet" href="css/animate.css">
+ <!-- owl carousel CSS -->
+ <link rel="stylesheet" href="css/owl.carousel.min.css">
+ <!-- font awesome CSS -->
+ <link rel="stylesheet" href="css/all.css">
+ <!-- flaticon CSS -->
+ <link rel="stylesheet" href="css/flaticon.css">
+ <link rel="stylesheet" href="css/themify-icons.css">
+ <!-- font awesome CSS -->
+ <link rel="stylesheet" href="css/magnific-popup.css">
+ <!-- swiper CSS -->
+ <link rel="stylesheet" href="css/slick.css">
+ <!-- style CSS -->
+ <link rel="stylesheet" href="css/style.css">
+  <style>
+    .transaction-table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    .transaction-table th, .transaction-table td {
+      padding: 12px;
+      border: 1px solid #ddd;
+    }
+    .transaction-table th {
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <%- include('header') %>
+
+  <div class="container mt-5 padding_top" >
+    <h2>Wallet History</h2>
+    <table class="transaction-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% walletTransactions.forEach(transaction => { %>
+          <tr>
+            <td><%= transaction.description %></td>
+            <td><%= transaction.date.toLocaleString() %></td>
+            <td><%= transaction.type %></td>
+            <td>₹<%= transaction.walletBalance %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <%- include('footer') %>
+</body>
+</html>

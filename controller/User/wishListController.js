@@ -8,20 +8,29 @@ exports.getWishListPage = async (req, res) => {
             console.log('User not authenticated');
             return res.status(401).render('login', { message: 'Please log in to view your wishlist.' });
         }
-
+        
         const userId = req.user._id;
         console.log('User ID:', userId);
-
-        // Find the user's wishlist
+        const cartCount = req.session.cartCount || 0;
+        // Find the user's wishlist and calculate the count
         const wishlist = await Wishlist.findOne({ userId: userId }).populate('products.productId');
+        const wishlistCount = wishlist ? wishlist.products.length : 0;
+        
+        // Store the wishlist count in the session
+        req.session.wishlistCount = wishlistCount;
+
+        // Make cartCount and wishlistCount available globally for the current response
+        res.locals.cartCount = cartCount;
+        res.locals.wishlistCount = wishlistCount;
 
         if (!wishlist) {
             console.log('Wishlist not found');
-            return res.render('wishList', { wishlistItems: [] });
+            return res.render('wishList', { wishlistItems: [], cartCount, wishlistCount });
         }
 
         // Pass the wishlist items to the EJS template
-        res.render('wishList', { wishlistItems: wishlist.products });
+         res.render('wishList', { wishlistItems: wishlist.products,cartCount,wishlistCount });
+        
     } catch (error) {
         console.error('Error retrieving wishlist:', error.stack);
         res.status(500).render('error', { message: 'Server error while retrieving wishlist.' });
@@ -73,12 +82,16 @@ exports.addToWishlist = async (req, res) => {
             }
 
             // Add the product to the wishlist
-            wishlist.products.push({ productId: new mongoose.Types.ObjectId(productId) });
+            wishlist.products.push({ productId });
         }
 
         // Save the wishlist
         await wishlist.save();
-        res.json({ success: true });
+        
+        // Update wishlistCount in the session
+        req.session.wishlistCount = wishlist.products.length;
+
+        res.json({ success: true, wishlistCount: req.session.wishlistCount });
         console.log('Wishlist updated successfully');
     } catch (error) {
         console.error('Error adding to wishlist:', error.stack);

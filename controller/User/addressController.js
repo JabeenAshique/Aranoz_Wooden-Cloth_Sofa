@@ -6,6 +6,7 @@ const addAddress = async (req, res) => {
             userId: req.session.user._id,
             ...req.body,
         });
+        
         await address.save();
         res.redirect('/updateAddress?success=Address added successfully');
     } catch (error) {
@@ -16,8 +17,10 @@ const addAddress = async (req, res) => {
 
 const getAddress = async (req, res) => {
     try {
+        const cartCount = req.session.cartCount || 0;
+        const wishlistCount = req.session.wishlistCount || 0;
         const addresses = await Address.find({ userId: req.session.user._id });
-        res.render('updateAddress', { addresses, user: req.session.user });
+        res.render('updateAddress', { addresses, user: req.session.user,cartCount,wishlistCount });
     } catch (error) {
         console.error('Error fetching addresses:', error);
         res.redirect('/updateAddress?error=Error fetching addresses');

@@ -1,57 +1,21 @@
 const User = require('../../models/userSchema');
 const Product = require('../../models/productSchema');
 
-// const addToCart = async (req, res) => {
-//     try {
-//         console.log('addToCart controller called'); // Debug log
-//         console.log('Request body:', req.body); // Debug log
-//         const { productId, quantity } = req.body;
-//         const userId = req.user._id; // Assuming you have user authentication and the user ID is available in req.user
-
-//         const user = await User.findById(userId);
-//         if (!user) {
-//             return res.status(404).json({ success: false, message: 'User not found' });
-//         }
-
-//         const product = await Product.findById(productId);
-//         if (!product) {
-//             return res.status(404).json({ success: false, message: 'Product not found' });
-//         }
-//         const requestedQuantity = parseInt(quantity);
-//         if (requestedQuantity > product.quantity) {
-//             return res.status(400).json({ success: false, message: 'Not enough stock available' });
-//         }
-//         const cartItem = user.cart.find(item => item.productId.toString() === productId);
-//         if (cartItem) {
-//             const newQuantity = cartItem.quantity + requestedQuantity;
-//             if (newQuantity > product.quantity) {
-//                 return res.status(400).json({ success: false, message: 'Not enough stock available' });
-//             }
-//             cartItem.quantity = newQuantity;
-//         } else {
-//             user.cart.push({ productId, quantity: requestedQuantity });
-//         }
-
-//         await user.save();
-//         res.json({ success: true });
-//     } catch (error) {
-//         console.error('Error adding to cart:', error);
-//         res.status(500).json({ success: false, message: 'Server error' });
-//     }
-// };
 
 const addToCart = async (req, res) => {
     try {
-      console.log('addToCart controller called'); // Debug log
-      console.log('Request body:', req.body); // Debug log
+     
       const { productId, quantity } = req.body;
       const userId = req.user._id; // Assuming you have user authentication and the user ID is available in req.user
       console.log('User ID:', userId); // Debug log
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-      }
-  
+      
+
+
+        // Retrieve the user document from the database
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
       const product = await Product.findById(productId);
       if (!product) {
         return res.status(404).json({ success: false, message: 'Product not found' });
@@ -63,7 +27,7 @@ const addToCart = async (req, res) => {
       if (quantity > product.quantity) {
         return res.status(400).json({ success: false, message: 'Quantity exceeds available stock' });
       }
-  
+      // Check if the product already exists in the cart
       const cartItem = user.cart.find(item => item.productId.toString() === productId);
       if (cartItem) {
         cartItem.quantity += parseInt(quantity);
@@ -72,7 +36,11 @@ const addToCart = async (req, res) => {
       }
   
       await user.save();
-      res.json({ success: true });
+       // Calculate the total quantity of items in the cart for the session
+       req.session.cartCount = user.cart.reduce((total, item) => total + item.quantity, 0);
+
+       res.json({ success: true, cartCount: req.session.cartCount });
+
       console.log('Cart updated successfully'); // Debug log
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -85,15 +53,22 @@ const addToCart = async (req, res) => {
 const loadCartPage = async (req, res) => {
     try {
         const userId = req.user._id; // Assuming you have user authentication and the user ID is available in req.user
+        const wishlistCount = req.session.wishlistCount || 0;
+        const cartCount = req.session.cartCount || 0;
+        // const user = await User.findById(userId).populate('cart.productId');
+        const user = await User.findById(userId)
+    .populate({
+        path: 'cart.productId',
+        match: { isBlocked: false } // Only populate products that are not blocked
+    });
 
-        const user = await User.findById(userId).populate('cart.productId');
         const cartItems = user.cart.map(item => ({
             product: item.productId,
             quantity: item.quantity,
             total: item.quantity * item.productId.salePrice // Calculate total price for each item
         }));
 
-        res.render('cart', { cartItems });
+        res.render('cart', { cartItems,cartCount,wishlistCount });
     } catch (error) {
         console.error('Error fetching cart details:', error);
         res.status(500).send('Server Error');
@@ -156,11 +131,14 @@ const removeFromCart = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
+        // Find the item to be removed to adjust the cart count
+        const itemToRemove = user.cart.find(item => item.productId.toString() === productId);
 
         user.cart = user.cart.filter(item => item.productId.toString() !== productId);
         await user.save();
-
-        res.json({ success: true });
+        // Update the cart count in the session
+        req.session.cartCount = user.cart.reduce((total, item) => total + item.quantity, 0);
+        res.json({ success: true,cartCount: req.session.cartCount });
     } catch (error) {
         console.error('Error removing from cart:', error);
         res.status(500).json({ success: false, message: 'Server error' });

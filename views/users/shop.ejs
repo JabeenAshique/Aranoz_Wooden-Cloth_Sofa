@@ -372,7 +372,120 @@
     })
     .catch(error => console.error('Error:', error));
 }
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/wishlist/count')
+        .then(response => response.json())
+        .then(data => {
+            const wishlistCountElement = document.getElementById('wishlist-count');
+            wishlistCountElement.innerText = data.wishlistCount || 0;
+        })
+        .catch(error => console.error('Error fetching wishlist count:', error));
+});
 
+// function toggleWishlist(button, productId) {
+//     const isInWishlist = button.classList.contains('active');
+
+//     if (!isInWishlist) {
+//         console.log('Adding to wishlist...');
+
+//         fetch('/wishlist/add', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             },
+//             body: JSON.stringify({ productId })
+//         })
+//         .then(response => response.json())
+//         .then(data => {
+//             if (data.success) {
+//                 button.classList.add('active');
+//                 Swal.fire({
+//                     icon: 'success',
+//                     title: 'Success',
+//                     text: 'Product added to wishlist successfully!',
+//                     showConfirmButton: false,
+//                     timer: 1500
+//                 }).then(() => {
+                  
+//                 // Update the wishlist count using the value returned from the server
+//                 const wishlistCountElement = document.getElementById('wishlist-count');
+//                 wishlistCountElement.innerText = data.wishlistCount || 0;
+//                 console.log('Wishlist count updated:', data.wishlistCount); // Debugging log
+//                 });
+//             }
+//                 else {
+//                 Swal.fire({
+//                     icon: 'error',
+//                     title: 'Error',
+//                     text: data.message || 'Failed to add product to wishlist',
+//                 });
+//             }
+//         })
+//         .catch(error => {
+//             console.error('Error:', error);
+//             Swal.fire({
+//                 icon: 'error',
+//                 title: 'Error',
+//                 text: 'An unexpected error occurred. Please try again later.',
+//             });
+//         });
+
+//     } else {
+//         Swal.fire({
+//             title: 'Are you sure?',
+//             text: "Do you want to remove this product from your wishlist?",
+//             icon: 'warning',
+//             showCancelButton: true,
+//             confirmButtonColor: '#d33',
+//             cancelButtonColor: '#3085d6',
+//             confirmButtonText: 'Yes, remove it!'
+//         }).then((result) => {
+//             if (result.isConfirmed) {
+//                 console.log('Removing from wishlist...');
+
+//                 fetch('/wishlist/remove', {
+//                     method: 'POST',
+//                     headers: {
+//                         'Content-Type': 'application/json'
+//                     },
+//                     body: JSON.stringify({ productId })
+//                 })
+//                 .then(response => response.json())
+//                 .then(data => {
+//                     if (data.success) {
+//                         button.classList.remove('active');
+//                         Swal.fire({
+//                             icon: 'success',
+//                             title: 'Removed!',
+//                             text: 'Product has been removed from your wishlist.',
+//                             showConfirmButton: false,
+//                             timer: 1500
+//                         }).then(() => {
+//                            // Update the wishlist count
+//                            const wishlistCountElement = document.getElementById('wishlist-count');
+//                             const currentCount = parseInt(wishlistCountElement.innerText) || 0;
+//                             wishlistCountElement.innerText = currentCount > 0 ? currentCount - 1 : 0;
+//                         });
+//                     }  else {
+//                         Swal.fire({
+//                             icon: 'error',
+//                             title: 'Error',
+//                             text: data.message || 'Failed to remove product from wishlist',
+//                         });
+//                     }
+//                 })
+//                 .catch(error => {
+//                     console.error('Error:', error);
+//                     Swal.fire({
+//                         icon: 'error',
+//                         title: 'Error',
+//                         text: 'An unexpected error occurred. Please try again later.',
+//                     });
+//                 });
+//             }
+//         });
+//     }
+// }
 function toggleWishlist(button, productId) {
     const isInWishlist = button.classList.contains('active');
 
@@ -396,6 +509,11 @@ function toggleWishlist(button, productId) {
                     text: 'Product added to wishlist successfully!',
                     showConfirmButton: false,
                     timer: 1500
+                }).then(() => {
+                    // Update the wishlist count using the value returned from the server
+                    const wishlistCountElement = document.getElementById('wishlist-count');
+                    wishlistCountElement.innerText = data.wishlistCount || 0;
+                    console.log('Wishlist count updated:', data.wishlistCount); // Debugging log
                 });
             } else {
                 Swal.fire({
@@ -444,6 +562,11 @@ function toggleWishlist(button, productId) {
                             text: 'Product has been removed from your wishlist.',
                             showConfirmButton: false,
                             timer: 1500
+                        }).then(() => {
+                            // Update the wishlist count using the value returned from the server
+                            const wishlistCountElement = document.getElementById('wishlist-count');
+                            wishlistCountElement.innerText = data.wishlistCount || 0;
+                            console.log('Wishlist count updated:', data.wishlistCount); // Debugging log
                         });
                     } else {
                         Swal.fire({
@@ -465,6 +588,8 @@ function toggleWishlist(button, productId) {
         });
     }
 }
+
+
 
     </script>
 

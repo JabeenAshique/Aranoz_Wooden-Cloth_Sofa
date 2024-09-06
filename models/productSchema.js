@@ -11,10 +11,6 @@ const productSchema = new Schema({
         required : true
 
     },
-    // author: {
-    //     type : String,
-        
-    // },
     category : {
         type : Schema.Types.ObjectId,
         ref : "Category",

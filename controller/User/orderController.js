@@ -116,16 +116,12 @@ const createOrder = async ({ orderedItems, totalPrice, discount, finalAmount, ad
 
 const orderPlaced = async (req, res) => {
     try {
-        const { addressId, payment, couponCode,paymentStatus  } = req.body;
+        const {  addressId, payment, couponCode, paymentStatus, razorpayOrderId, razorpayPaymentId  } = req.body;
         const userId = req.user._id;
 
         if (!addressId || !payment) {
             return res.status(400).json({ success: false, message: 'Address and payment method are required.' });
         }
-      //   if (payment === 'razorpay') {
-      //     return res.redirect('/order/createRazorpayOrder');
-      // }
-
         const { user, address } = await findUserAndAddress(userId, addressId);
         const { productDiscount, couponDiscount, couponApplied, appliedCouponCode } = await calculateDiscounts(user, couponCode, req);
 
@@ -152,6 +148,8 @@ const orderPlaced = async (req, res) => {
             couponDiscount,
             couponApplied,
             paymentStatus: paymentStatus, 
+            razorpayOrderId,
+            razorpayPaymentId
         });
 
         if (payment === 'Wallet') {
@@ -164,9 +162,11 @@ const orderPlaced = async (req, res) => {
         }
 
         user.cart = [];
+        req.session.cartCount = 0;  // Reset cart count in the session
+        cartCount = 0;  // Update the local variable to return in the response
         await user.save();
 
-        res.json({ success: true, message: 'Order placed successfully.' });
+        res.json({ success: true, message: 'Order placed successfully.',cartCount });
     } catch (error) {
         console.error('Error placing order:', error);
         res.status(500).json({ success: false, message: 'An error occurred. Please try again.' });
@@ -177,6 +177,7 @@ const createRazorpayOrder = async (req, res) => {
   try {
       console.log('Reached /createRazorpayOrder route');
       const { addressId, payment, couponCode } = req.body;
+     
       const userId = req.user._id;
 
       if (!addressId || !payment) {
@@ -189,29 +190,17 @@ const createRazorpayOrder = async (req, res) => {
       const totalPrice = user.cart.reduce((acc, item) => acc + (item.quantity * item.productId.salePrice), 0);
       const discount = productDiscount + couponDiscount;
       const finalAmount = totalPrice - discount
-
+     
       const options = {
-          amount: finalAmount * 100, // Amount in paise
+          amount: finalAmount * 100, 
           currency: "INR",
-          //receipt: order_rcptid_${new Date().getTime()}
           receipt: `order_rcptid_${new Date().getTime()}`
-
       };
 
       const order = await razorpayInstance.orders.create(options);
 
       if (!order) {
           return res.status(500).json({ success: false, message: 'Razorpay order creation failed.' });
-      }
-      const updatedOrder = await Order.findOneAndUpdate(
-        { userId: userId, payment: 'razorpay', paymentStatus: 'Pending' }, // This line might cause issues
-        { $set: { razorpayOrderId: order.id } }, // Set the Razorpay order ID
-        { new: true }
-    );
-    
-
-      if (!updatedOrder) {
-          return res.status(500).json({ success: false, message: 'Failed to update the order with Razorpay Order ID.' });
       }
       res.json({
           success: true,
@@ -220,7 +209,7 @@ const createRazorpayOrder = async (req, res) => {
           currency: order.currency,
           key: process.env.RAZORPAY_KEY_ID,
           name: "Aranoz",
-          discount // Send discount details back to the client
+          discount 
       });
 
   } catch (error) {
@@ -231,9 +220,15 @@ const createRazorpayOrder = async (req, res) => {
 };
 
 const finalizeOrderPlacement = async (req, res) => {
+  console.log('Reached /FinilizeRazorpayOrder route');
   try {
       const { razorpayOrderId, razorpayPaymentId,paymentStatus  } = req.body;
       const userId = req.user._id;
+      const cartCount = req.session.cartCount || 0;
+      console.log('razorpayOrderId:', razorpayOrderId);
+      console.log('razorpayPaymentId:', razorpayPaymentId);
+      console.log('paymentStatus:', paymentStatus);
+
 
       const user = await User.findById(userId).populate('cart.productId');
 
@@ -241,28 +236,9 @@ const finalizeOrderPlacement = async (req, res) => {
           return res.status(404).json({ success: false, message: 'User not found.' });
       }
 
-      const order = await Order.findOne({ razorpayOrderId, userId });
-      // If the order exists, update it
-      if (order) {
-        // Update the order with payment details and payment status
-          order.razorpayOrderId = razorpayOrderId;
-          order.razorpayPaymentId = razorpayPaymentId || null;
-          order.paymentStatus = paymentStatus;  // This line might cause issues
-          order.status = paymentStatus === 'Success' ? 'Paid' : 'Payment Failed'; // Set status based on payment outcome
-
-        // Save the updated order
-      await order.save();
-
-     // Clear the user's cart after successful payment
-      if (paymentStatus === 'Success') {
-      user.cart = [];
-      await user.save();
-     }
-
-  res.json({ success: true, message: 'Order payment status updated successfully.', orderId: order._id });
-} 
-
-  else {
+            // Find the existing order
+            const order = await Order.findOne({ razorpayOrderId, userId });
+ 
     const newOrder = await createOrder({
         orderedItems: user.cart.map(item => ({
             product: item.productId._id,
@@ -270,29 +246,31 @@ const finalizeOrderPlacement = async (req, res) => {
             price: item.productId.salePrice
         })),
         totalPrice: user.cart.reduce((acc, item) => acc + (item.quantity * item.productId.salePrice), 0),
-        discount: 0, // Adjust this based on your needs
-        finalAmount: user.cart.reduce((acc, item) => acc + (item.quantity * item.productId.salePrice), 0), // Include your discount logic
-        address: user.addresses, // Ensure the address is linked correctly
+        discount: 0, 
+        finalAmount: user.cart.reduce((acc, item) => acc + (item.quantity * item.productId.salePrice), 0), 
+        address: user.addresses, 
         payment: 'razorpay',
         userId: userId,
         razorpayOrderId: razorpayOrderId,
         razorpayPaymentId: razorpayPaymentId || null,
         paymentStatus: paymentStatus,
-        status: paymentStatus === 'Success' ? 'Paid' : 'Payment Failed' // Update order status based on payment outcome
+        status: 'Pending',
     });
 
-    // Save the new order
+
     await newOrder.save();
 
-    // Clear the user's cart after successful payment
+    
     if (paymentStatus === 'Success') {
         user.cart = [];
+         req.session.cartCount = 0;  // Reset cart count in the session
+        cartCount = 0;  // Update the local variable to return in the response
         await user.save();
     }
 
-    res.json({ success: true, message: 'Order finalized successfully.', orderId: newOrder._id });
+    res.json({ success: true, message: 'Order finalized successfully.', orderId: newOrder._id,cartCount });
 }
-} catch (error) {
+ catch (error) {
 console.error('Error finalizing order:', error);
 res.status(500).json({ success: false, message: 'An error occurred. Please try again.' });
 }
@@ -303,10 +281,10 @@ const loadOrderPage = async (req, res) => {
   try {
     const wishlistCount = req.session.wishlistCount || 0;
     const cartCount = req.session.cartCount || 0;
-    const userId = req.user._id; // Ensure you're using a middleware to set req.user
+    const userId = req.user._id; 
     const orders = await Order.find({ userId })
-    .sort({ createdOn: -1 }) // Sort orders by createdOn in descending order
-    .populate('orderedItems.product', 'productName') // Populate the 'name' field of each product in orderedItems
+    .sort({ createdOn: -1 })
+    .populate('orderedItems.product', 'productName') 
     .lean();
 
     for (let order of orders) {
@@ -520,40 +498,95 @@ const downloadInvoice = async (req, res) => {
 
 const retryPayment = async (req, res) => {
   try {
-      const { razorpayOrderId } = req.body;
+      const { orderId } = req.params;
       const userId = req.user._id;
 
-      // Find the existing order by razorpayOrderId and userId
-      const order = await Order.findOne({ razorpayOrderId, userId });
-      if (!order) {
-          return res.status(404).json({ success: false, message: 'Order not found.' });
+      // Find the order using the Razorpay order ID
+      const order = await Order.findOne({ _id: orderId, userId });
+
+      if (!order || order.paymentStatus !== 'Failed') {
+          return res.status(404).json({ success: false, message: 'Order not found or payment not failed.' });
       }
 
-      // Re-initialize Razorpay payment
-      const options = {
-          amount: order.finalAmount * 100,  // Amount in paise
-          currency: "INR",
-          receipt: order.razorpayOrderId,   // Use the existing Razorpay order ID
-      };
-
-      const newRazorpayOrder = await razorpayInstance.orders.create(options);
-      if (!newRazorpayOrder) {
-          return res.status(500).json({ success: false, message: 'Failed to create Razorpay order.' });
-      }
-
-      // Send back the necessary details to initialize Razorpay payment on the frontend
+      // Return the existing Razorpay order details for retrying payment
       res.json({
           success: true,
-          razorpayOrderId: newRazorpayOrder.id,
-          amount: newRazorpayOrder.amount,
-          currency: newRazorpayOrder.currency,
-          key: process.env.RAZORPAY_KEY_ID,
-          name: "Aranoz",
-          orderId: order._id
+          razorpayOrderId: order.razorpayOrderId,  
+          amount: order.finalAmount * 100,  // Razorpay requires the amount in paise (multiply by 100)
+          currency: "INR",
+          key: process.env.RAZORPAY_KEY_ID,  // Razorpay Key ID
+          name: "YourAppName"  // Optional: Name of the app
       });
-
   } catch (error) {
       console.error('Error retrying payment:', error);
+      res.status(500).json({ success: false, message: 'An error occurred while retrying payment.' });
+  }
+};
+const retryplaceOrder = async (req, res) => {
+  try {
+    console.log('Received retry place order request:', req.body);
+    const { payment, paymentStatus, razorpayOrderId, razorpayPaymentId } = req.body;
+      const userId = req.user._id;
+
+    
+      // Find the existing order using razorpayOrderId and userId
+      const order = await Order.findOne({ razorpayOrderId, userId });
+
+      if (order) {
+          // Update the existing order with new payment details
+          order.razorpayPaymentId = razorpayPaymentId;
+          order.paymentStatus = paymentStatus;
+          await order.save();
+
+          if (paymentStatus === 'Success') {
+              // Clear the user's cart if payment is successful
+              const user = await User.findById(userId);
+              user.cart = [];
+              await user.save();
+          }
+
+          return res.json({ success: true, message: 'Order payment status updated successfully.' });
+      } else {
+          return res.status(404).json({ success: false, message: 'Order not found or payment not failed.' });
+      }
+  } catch (error) {
+      console.error('Error retrying order placement:', error);
+      return res.status(500).json({ success: false, message: 'An error occurred. Please try again.' });
+  }
+};
+
+const finalizereOrderPlacement = async (req, res) => {
+  try {
+      const { orderId } = req.params;
+      const { paymentStatus, razorpayOrderId, razorpayPaymentId } = req.body;
+      const userId = req.user._id;
+
+      console.log('Finalizing order for orderId:', orderId);
+
+      
+      const order = await Order.findOne({ _id: orderId, razorpayOrderId, userId });
+
+      if (!order) {
+          return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+
+      // Update the order's payment details
+      order.paymentStatus = paymentStatus;
+      order.razorpayPaymentId = razorpayPaymentId;
+      
+
+      await order.save();
+
+      // If payment succeeded, clear the user's cart
+      if (paymentStatus === 'Success') {
+          const user = await User.findById(userId);
+          user.cart = [];
+          await user.save();
+      }
+
+      res.json({ success: true, message: 'Order payment finalized successfully.', orderId: order._id });
+  } catch (error) {
+      console.error('Error finalizing order:', error);
       res.status(500).json({ success: false, message: 'An error occurred. Please try again.' });
   }
 };
@@ -568,6 +601,8 @@ const retryPayment = async (req, res) => {
     OrderCancel,
     OrderReturn,
     downloadInvoice,
-    retryPayment
+    retryPayment,
+    retryplaceOrder,
+    finalizereOrderPlacement
     
   }

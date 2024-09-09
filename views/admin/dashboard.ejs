@@ -6,8 +6,9 @@
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="../css/dataTables.bootstrap5.min.css">
   <link rel="stylesheet" href="/css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Updated Chart.js CDN -->
   <style>
     .navbar.bg-light {
       background-color: #569c79 !important;
@@ -44,28 +45,520 @@
     .container-fluid {
       padding: 0 20px; /* Adjust padding to reduce space */
     }
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      margin: 0 auto;
+      max-width: 1200px;
+    }
+
+    h1 {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 36px;
+      color: #333;
+    }
+
+    .summary-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background-color: #f0f0f0;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .best-selling, .best-categories {
+      margin: 30px 0;
+    }
+
+    .products-list {
+      display: flex;
+      overflow-x: auto;
+      padding: 10px;
+    }
+
+    .product-item {
+      margin-right: 15px;
+      text-align: center;
+    }
+
+    .product-item img {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .best-categories table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    .best-categories th, .best-categories td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .best-categories th {
+      background-color: #f9f9f9;
+    }
+
+    .sale-statistics, .revenue-category {
+      margin: 30px 0;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+    .summary-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid black; /* Add a black border around the entire summary-stats row */
+    border-radius: 8px; /* Optional: Add some border radius to make it look more polished */
+}
+
+.stat {
+    background-color: #ffffff;
+    padding: 60px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Optional subtle shadow for individual boxes */
+}
+/* Flexbox container for charts */
+.charts-row {
+    display: flex;
+    justify-content: space-between;  /* Space between charts */
+    align-items: center;  /* Vertically center align */
+    padding: 20px;        /* Add padding around the container */
+    border: 1px solid black; /* Add a thin black border around the entire row */
+    border-radius: 8px;   /* Optional: rounded corners */
+}
+
+/* Sale statistics chart */
+.sale-statistics {
+    flex: 2;  /* Take 2 parts of the available space */
+    margin-right: 20px;  /* Space between the two charts */
+}
+
+/* Revenue category chart */
+.revenue-category {
+    flex: 1;  /* Take 1 part of the available space */
+}
+
+/* Adjust the canvas to fit the container */
+canvas {
+    width: 100%;  /* Ensure the canvas takes full width */
+    height: auto; /* Maintain aspect ratio */
+}
+/* Flexbox container for the products */
+.products-list {
+    display: flex;
+    overflow-x: auto;  /* Allows horizontal scrolling */
+    padding: 10px;
+    gap: 10px;  /* Space between products */
+}
+.revenue-category {
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    background-color: #f9f9f9;  /* Light background */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Optional: shadow */
+}
+
+select.form-control {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+
+/* Product item container */
+/* Container for the entire products section with a thin black border */
+.products-container {
+    border: 1px solid black;  /* Thin black border around the entire product list */
+    padding: 20px;            /* Add some padding inside the container */
+    border-radius: 8px;       /* Optional: rounded corners */
+    margin-top: 20px;         /* Add some margin at the top */
+}
+
+/* Flexbox container for the products */
+.products-list {
+    display: flex;
+    overflow-x: auto;  /* Allows horizontal scrolling */
+    padding: 10px;
+    gap: 10px;  /* Space between products */
+}
+
+/* Product item container */
+.product-item {
+    flex: 0 0 auto;  /* Prevent items from shrinking */
+    text-align: center;
+}
+
+/* Box around each product */
+.product-box {
+    padding: 10px;  /* Add some padding inside the box */
+    width: 150px;   /* Set a fixed width for the product */
+}
+
+/* Image styling */
+.product-box img {
+    width: 100%;  /* Make the image fit the box */
+    height: auto;
+}
+
+/* Product name styling */
+.product-box h4 {
+    font-size: 14px;  /* Smaller font size */
+    margin-top: 10px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+/* Sold text styling */
+.product-box p {
+    font-size: 12px;  /* Smaller font size */
+    color: #666;
+}
+/* Container for the table with a thin black border */
+/* Container for the table with a thin border and padding */
+.categories-container {
+    border: 1px solid #e5e5e5;  /* Light border */
+    border-radius: 8px;         /* Rounded corners */
+    padding: 20px;              /* Add padding around the table */
+    margin-top: 20px;           /* Space between sections */
+    background-color: #ffffff;  /* Light background color */
+}
+
+/* Full width for the table */
+table {
+    width: 100%;                /* Take full width of the container */
+
+}
+
+/* Table header styling */
+th {
+    text-align: left;
+    padding: 10px;
+    background-color: #f5f5f5;   /* Light grey for the header background */
+    color: #333;                 /* Dark text color */
+    font-weight: bold;
+    border-bottom: 1px solid #e5e5e5;  /* Light border below the header */
+}
+
+/* Table row styling */
+td {
+    padding: 10px;
+    color: #333;
+   
+}
+
+/* Remove last border on the last row */
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Optional: Add subtle hover effect on rows */
+tbody tr:hover {
+    background-color: #f0f0f0;
+}
+
   </style>
 </head>
 <body>
   <%- include('sidebar') %>
 
+  <main class="mt-5 pt-3">
+    <div class="container-fluid content">    
+      <div class="row">
+        <div class="container">
+         <h4>Dashboard</h4>
+          <p>Whole data about our bussiness</p>
 
-<main class="mt-5 pt-3">
-  <div class="container-fluid content">    
-    <div class="row">
-      <div class="col-md-12">
-        <h4>Dashboard</h4>
-        <!-- Your main content goes here -->
+          <!-- Summary Stats -->
+          <div class="summary-stats">
+            <div class="stat">
+                <h5>Total Customers</h5>
+                <p><%= totalCustomers %></p>
+            </div>
+            <div class="stat">
+                <h5>Total Orders</h5>
+                <p><%= totalOrders %></p>
+            </div>
+            <div class="stat">
+                <h5>Total Products</h5>
+                <p><%= totalProducts %></p>
+            </div>
+            
+        </div>
+        <!-- Flexbox container for both charts in the same row -->
+          <div class="charts-row">
+            <div class="sale-statistics">
+                <h5>Sale Statistics</h5>
+                <select id="salesTimePeriod" class="form-control" onchange=fetchSalesStatistics()>
+                  <option value="yearly" <%= salesTimePeriod === 'yearly' ? 'selected' : '' %>>Yearly</option>
+                  <option value="monthly" <%= salesTimePeriod === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                  <option value="weekly" <%= salesTimePeriod === 'weekly' ? 'selected' : '' %>>Weekly</option>
+              </select>
+              <canvas id="saleStatisticsChart"></canvas> 
+            </div>
+
+            <div class="revenue-category">
+              <h5>Products Sold Based on Time Period</h5>
+              <select id="timePeriod" class="form-control" onchange="fetchProductsSoldData()">
+                <option value="yearly" <%= timePeriod === 'yearly' ? 'selected' : '' %>>Yearly</option>
+                <option value="monthly" <%= timePeriod === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                <option value="weekly" <%= timePeriod === 'weekly' ? 'selected' : '' %>>Weekly</option>
+            </select>
+            
+              <canvas id="productsSoldChart"></canvas>
+          </div>
+</div>
+          <!-- Top 10 Best Selling Products -->
+          <div class="best-selling">
+         
+            <div class="products-container">
+              <h5>Top 10 Best Selling Products</h5>
+                <div class="products-list">
+                    <% products.forEach(product => { %>
+                        <div class="product-item">
+                            <div class="product-box">
+                                <img src="<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                                <h4><%= product.productName %></h4>
+                                <p>Sold: <%= topSellingProducts.find(p => p._id.equals(product._id)).totalSold %></p>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        </div>
+        
+          <!-- Top 10 Best Selling Categories -->
+          <div class="best-categories">
+          
+            <div class="categories-container">
+              <h5>Top 10 Best Selling Categories</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category Name</th>
+                            <th>Total Quantity Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      <% topSellingCategories.forEach(category => { %>
+                        <tr>
+                            <!-- Match category._id with the categories array to display the name -->
+                            <td><%= categories.find(c => c._id.toString() === category._id.toString()).name %></td>
+                            <td><%= category.totalSold %></td>
+                        </tr>
+                    <% }) %>
+                </table>
+            </div>
+        </div>
+        
+        </div>
       </div>
     </div>
-  </div>
-</main>
+  </main>
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-<script src="./js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.2/dist/chart.min.js"></script>
-<script src="./js/jquery-3.5.1.js"></script>
-<script src="./js/jquery.dataTables.min.js"></script>
-<script src="./js/dataTables.bootstrap5.min.js"></script>
-<script src="./js/script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+      console.log("JavaScript file loaded successfully.");
+   
+      function fetchSalesStatistics() {
+        console.log("fetchSalesStatistics function is triggered");
+        const salesTimePeriod = document.getElementById('salesTimePeriod').value;
+        window.location.href = `/admin/dashboard?salesTimePeriod=${salesTimePeriod}`;
+      }
+
+    // Generate labels for the chart based on the selected time period
+   
+
+    // Sale Statistics Data for Line Chart
+    const salesTimePeriod = "<%= salesTimePeriod %>";  // Get the selected time period from the backend
+    const salesData = JSON.parse('<%- salesData %>');  // Parse sales data from JSON string
+    const usersData = JSON.parse('<%- usersData %>');  // Parse users data from JSON string
+    const productsData = JSON.parse('<%- productsData %>');  // Parse products data from JSON string
+    const ordersData = JSON.parse('<%- ordersData %>');  // Parse orders data from JSON string
+    console.log('Sales Data:', salesData);
+    console.log('Users Data:', usersData);
+    console.log('Products Data:', productsData);
+    console.log('Orders Data:', ordersData);
+
+ // For Orders
+ 
+    // Define the labels based on the time period (e.g., Weeks or Months)
+    const labels = getLabelsForTimePeriod(salesTimePeriod, salesData);
+
+    // Update the chart datasets with fetched data
+    const saleStatisticsData = {
+        labels: labels,  // Use dynamically generated labels (e.g., Week 1, Week 2, etc.)
+        datasets: [
+            {
+                label: 'Users',
+                data: usersData,  // Pass the users data fetched from the server
+                borderColor: 'blue',
+                fill: false,
+                tension: 0.1
+            },
+            {
+                label: 'Products',
+                data: productsData,  // Pass the products data fetched from the server
+                borderColor: 'green',
+                fill: false,
+                tension: 0.1
+            },
+            {
+                label: 'Orders',
+                data: ordersData,  // Pass the orders data fetched from the server
+                borderColor: 'pink',
+                fill: false,
+                tension: 0.1
+            }
+        ]
+    };
+
+    // Create a new Chart.js instance or update the existing chart
+    const saleStatisticsChart = new Chart(
+        document.getElementById('saleStatisticsChart'),  // Ensure the canvas element exists in your HTML
+        {
+            type: 'line',
+            data: saleStatisticsData,
+            options: {
+                responsive: true,  // Make the chart responsive
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time Period',  // Label for X-axis
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Count'  // Label for Y-axis
+                        },
+                        beginAtZero: true  // Start Y-axis at 0
+                    }
+                }
+            }
+        }
+    );
+
+
+// Function to fetch labels based on selected time period
+function getLabelsForTimePeriod(SalestimePeriod, data) {
+    if (SalestimePeriod === 'yearly') {
+        return data.map(item => `${item._id}`);  // Years (e.g., 2020, 2021)
+    } else if (SalestimePeriod === 'monthly') {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return monthNames;  // Use fixed month names
+    } else if (SalestimePeriod === 'weekly') {
+        return data.map(item => `Week ${item._id}`);  // Grouping by week (e.g., Week 1, Week 2)
+    }
+}
+
+
+  // Function to fetch products sold data based on the selected time period
+  function fetchProductsSoldData() {
+        const timePeriod = document.getElementById('timePeriod').value;
+        window.location.href = `/admin/dashboard?timePeriod=${timePeriod}`;  // Reload page with the selected time period
+    }
+
+    // Generate labels for the pie chart based on the selected time period (yearly, monthly, weekly)
+    function getLabelsForTimePeriod1(timePeriod, data) {
+      console.log(`Generating labels for ${timePeriod}`);
+    console.log('Data:', data);  // Debugging to check the structure of the data
+
+    if (timePeriod === 'yearly') {
+        return data.map(item => {
+            console.log('Yearly _id:', item._id);  // Debugging yearly data
+            return `${item._id}`;  // Years (e.g., 2020, 2021)
+        });
+    } else if (timePeriod === 'monthly') {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return data.map(item => {
+            console.log('Monthly _id:', item._id);  // Debugging monthly data
+            return monthNames[item._id - 1];  // Map month numbers (1-12) to names
+        });
+    } else if (timePeriod === 'weekly') {
+        return data.map(item => {
+            console.log('Weekly _id:', item._id);  // Debugging weekly data
+            return `Week ${item._id}`;  // Week numbers (e.g., Week 1, Week 2)
+        });
+    }
+    }
+
+    // Products Sold Pie Chart Setup
+    const productsSoldData = JSON.parse('<%- productsSoldByPeriod %>');  // The products data from backend
+    const timePeriod = "<%= timePeriod %>";  // The selected time period passed from the backend
+
+    const labels1 = getLabelsForTimePeriod1(timePeriod, productsSoldData);  // Generate labels based on the time period
+
+    // Chart.js Pie Chart Data and Configuration
+    const productsSoldChartData = {
+        labels1: labels,  // Labels generated dynamically (e.g., months, years, weeks)
+        datasets: [{
+            data: productsSoldData.map(item => item.totalProductsSold),  // Data for products sold
+            backgroundColor: ['#d9534f', '#5bc0de', '#5cb85c', '#f0ad4e', '#337ab7'],  // Colors for each segment
+            hoverOffset: 4
+        }]
+    };
+
+    // Initialize the Pie Chart
+    const productsSoldChart = new Chart(
+        document.getElementById('productsSoldChart'),  // The canvas element for the chart
+        {
+            type: 'pie',
+            data: productsSoldChartData,
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                const period = productsSoldChartData.labels[tooltipItem.dataIndex];
+                                const totalProductsSold = productsSoldChartData.datasets[0].data[tooltipItem.dataIndex];
+                                return `${period}: ${totalProductsSold} products sold`;  // Custom tooltip
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+      
+  </script>
+
+  <!-- jQuery and Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- DataTables CSS and JS -->
+  <link href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+  <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap5.min.js"></script>
 </body>
 </html>

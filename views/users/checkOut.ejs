@@ -286,40 +286,8 @@
   </div>
 <!-- end edit_modal -->
 <%- include('footer') %>
-
-
   <!-- jquery plugins here-->
-  <!-- jquery -->
-  <script src="js/jquery-1.12.1.min.js"></script>
-  <!-- popper js -->
-  <script src="js/popper.min.js"></script>
-  <!-- bootstrap js -->
-  <script src="js/bootstrap.min.js"></script>
-  <!-- easing js -->
-  <script src="js/jquery.magnific-popup.js"></script>
-  <!-- swiper js -->
-  <script src="js/swiper.min.js"></script>
-  <!-- swiper js -->
-  <script src="js/masonry.pkgd.js"></script>
-  <!-- particles js -->
-  <script src="js/owl.carousel.min.js"></script>
-  <script src="js/jquery.nice-select.min.js"></script>
-  <!-- slick js -->
-  <script src="js/slick.min.js"></script>
-  <script src="js/jquery.counterup.min.js"></script>
-  <script src="js/waypoints.min.js"></script>
-  <script src="js/contact.js"></script>
-  <script src="js/jquery.ajaxchimp.min.js"></script>
-  <script src="js/jquery.form.js"></script>
-  <script src="js/jquery.validate.min.js"></script>
-  <script src="js/mail-script.js"></script>
-  <script src="js/stellar.js"></script>
-  <script src="js/price_rangs.js"></script>
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
-
   <script>
-  
 function handleOrderPlacement() {
     const selectedAddress = document.querySelector('input[name="address"]:checked');
     const selectedPayment = document.querySelector('input[name="paymentMethod"]:checked');
@@ -346,66 +314,6 @@ function handleOrderPlacement() {
     // Disable the proceed button to prevent multiple clicks
     document.querySelector('.btn_3').disabled = true;
 
-//     if (paymentMethod === 'razorpay') {
-//         // Handle Razorpay payment
-//         fetch('/createRazorpayOrder', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json'
-//             },
-//             body: JSON.stringify({ addressId: addressId, payment: paymentMethod })
-//         })
-//         .then(response => response.json())
-//         .then(data => {
-//             if (data.success) {
-//                 var options = {
-//                     "key": data.key,
-//                     "amount": data.amount, // amount in the smallest currency unit (paise)
-//                     "currency": data.currency,
-//                     "name": data.name,
-//                     "description": "Order Payment",
-//                     "image": "/your_logo.png",
-//                     "order_id": data.razorpayOrderId, // Razorpay order ID
-//                     "handler": function (response) {
-//                         // This function will be called after payment is successful
-//                         finalizeOrderPlacement(addressId, paymentMethod, data.razorpayOrderId, response.razorpay_payment_id);
-//                     },
-//                     "prefill": {
-//                         "name": "Jabeen K P",
-//                         "email": "jbjaby@gmail.com",
-//                         "contact": "8075647574"
-//                     },
-//                     "theme": {
-//                         "color": "#3399cc"
-//                     }
-//                 };
-//                 var rzp1 = new Razorpay(options);
-//                 rzp1.open();
-//             } else {
-//                 Swal.fire({
-//                     icon: 'error',
-//                     title: 'Payment Failed',
-//                     text: 'Failed to initiate payment, please try again.',
-//                 });
-//                 // Re-enable the button if payment initiation fails
-//                 document.querySelector('.btn_3').disabled = false;
-//             }
-//         })
-//         .catch(error => {
-//             console.error('Error:', error);
-//             Swal.fire({
-//                 icon: 'error',
-//                 title: 'Oops',
-//                 text: 'An error occurred. Please try again.',
-//             });
-//             // Re-enable the button in case of error
-//             document.querySelector('.btn_3').disabled = false;
-//         });
-//     } else {
-//         // Handle COD and Wallet directly
-//         finalizeOrderPlacement(addressId, paymentMethod);
-//     }
-// }
 if (paymentMethod === 'Razorpay') {
         // Handle Razorpay payment
         fetch('/order/createRazorpayOrder', {
@@ -416,6 +324,7 @@ if (paymentMethod === 'Razorpay') {
             body: JSON.stringify({ addressId: addressId, payment: paymentMethod })
         })
         .then(response => response.json())
+        
         .then(data => {
             if (data.success) {
               var options = {
@@ -485,7 +394,7 @@ function finalizeOrderPlacement(addressId, paymentMethod, paymentStatus, razorpa
             razorpayPaymentId: razorpayPaymentId,
             
         };
-
+console.log(orderData)
         fetch('/placeOrder', {
             method: 'POST',
             headers: {
@@ -616,6 +525,33 @@ $('#editAddressForm').submit(function(event) {
 });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- jquery -->
+    <script src="js/jquery-1.12.1.min.js"></script>
+    <!-- popper js -->
+    <script src="js/popper.min.js"></script>
+    <!-- bootstrap js -->
+    <script src="js/bootstrap.min.js"></script>
+    <!-- easing js -->
+    <script src="js/jquery.magnific-popup.js"></script>
+    <!-- swiper js -->
+    <script src="js/swiper.min.js"></script>
+    <!-- swiper js -->
+    <script src="js/masonry.pkgd.js"></script>
+    <!-- particles js -->
+    <script src="js/owl.carousel.min.js"></script>
+    <script src="js/jquery.nice-select.min.js"></script>
+    <!-- slick js -->
+    <script src="js/slick.min.js"></script>
+    <script src="js/jquery.counterup.min.js"></script>
+    <script src="js/waypoints.min.js"></script>
+    <script src="js/contact.js"></script>
+    <script src="js/jquery.ajaxchimp.min.js"></script>
+    <script src="js/jquery.form.js"></script>
+    <script src="js/jquery.validate.min.js"></script>
+    <script src="js/mail-script.js"></script>
+    <script src="js/stellar.js"></script>
+    <script src="js/price_rangs.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 </body>
 

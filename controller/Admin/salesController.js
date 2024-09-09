@@ -179,6 +179,17 @@ exports.downloadPdfReport = async (req, res) => {
         const filter = applyFilter(period, startDate, endDate);
         const orders = await fetchOrders(filter);
 
+        let totalAmount = 0;
+        let totalQuantity = 0;
+        const totalCount = orders.length;  
+
+        
+        orders.forEach(order => {
+            totalAmount += order.finalAmount;
+            totalQuantity += order.orderedItems.reduce((acc, item) => acc + item.quantity, 0);
+        });
+
+
         const doc = new PDFDocument({ size: 'A4', margin: 30 });
 
         res.setHeader('Content-Type', 'application/pdf');
@@ -247,7 +258,14 @@ exports.downloadPdfReport = async (req, res) => {
             doc.strokeColor('#aaaaaa').lineWidth(0.5).moveTo(columnPositions.date, doc.y).lineTo(columnPositions.total + 40, doc.y).stroke();
             doc.moveDown(0.5);
         });
-        
+         // Adding the total amount, total quantity, and total count at the bottom of the PDF
+         doc.moveDown(2);
+         doc.fontSize(12).fillColor('#000000').text('Total Orders:', 40, undefined, { continued: true });
+         doc.text(totalCount, columnPositions.orderId, undefined, { continued: true });  // Display total count of orders
+         doc.text('Total Quantity:', columnPositions.quantity, undefined, { continued: true });
+         doc.text(totalQuantity, columnPositions.quantity, undefined, { continued: true });
+         doc.text('Total Amount:', 540, undefined, { continued: true });
+         doc.text(`₹${totalAmount}`, columnPositions.total);
         doc.end();
     } catch (error) {
         console.error('Error generating PDF report:', error);

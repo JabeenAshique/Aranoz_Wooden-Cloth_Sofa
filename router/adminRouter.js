@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const adminController = require("../controller/Admin/adminCotroller");
+const adminController = require("../controller/Admin/adminController");
 const categoryController = require("../controller/Admin/categoryController");
 const productController = require("../controller/Admin/productController");
 const customerController = require("../controller/Admin/customerController");
@@ -19,6 +19,7 @@ router.post("/login", adminController.postAdminLogin);
 
 //dashboard
 router.get("/dashboard",authMiddlewares.isAdmin, adminController.getAdminDashboard);
+
 
 //Category
 router.get("/category",authMiddlewares.isAdmin, categoryController.getCategoryPage);

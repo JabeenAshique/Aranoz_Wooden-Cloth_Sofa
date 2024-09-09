@@ -28,23 +28,27 @@ const upload = multer({
             cb(new Error('Error: Images Only!'), false);
         }
     }
-}).array('productImage', 3);
-
+}).array('productImage',5);
 exports.uploadCroppedImage = (req, res) => {
     upload(req, res, (err) => {
         if (err) {
-            console.error('Error uploading cropped image:', err);
-            return res.status(500).json({ error: 'Error uploading cropped image' });
+            console.error('Error uploading cropped images:', err);
+            return res.status(500).json({ error: 'Error uploading cropped images' });
         } else {
-            const file = req.file;
-            if (!file) {
-                return res.status(400).json({ error: 'No file uploaded' });
+            // Check if files were uploaded
+            if (!req.files || req.files.length === 0) {
+                return res.status(400).json({ error: 'No files uploaded' });
             }
-            // Send the path of the uploaded image back to the client for preview
-            return res.status(200).json({ filePath: '/uploads/' + file.filename });
+
+            // Array of uploaded file paths
+            const filePaths = req.files.map(file => '/uploads/' + file.filename);
+
+            // Send the array of file paths back to the client
+            return res.status(200).json({ filePaths });
         }
     });
 };
+
 exports.addProduct = (req, res) => {
     upload(req, res, async (err) => {
         if (err) {
@@ -55,13 +59,16 @@ exports.addProduct = (req, res) => {
                 const { productName, description, category, regularPrice, salePrice, productOffer, quantity } = req.body;
 
                 if (!req.files || req.files.length === 0) {
-                    return res.redirect('/admin/product?error=No images uploaded');
+                    // return res.redirect('/admin/product?error=No images uploaded');
+                    return res.status(400).json({ error: 'No images uploaded' });
                 }
                  // Validate for duplicate product name (case insensitive)
                  const existingProduct = await Product.findOne({ productName: new RegExp(`^${productName}$`, 'i') });
                  if (existingProduct) {
-                     return res.redirect('/admin/product?error=Product name already exists');
+                    //  return res.redirect('/admin/product?error=Product name already exists');
+                    return res.status(400).json({ error: 'Product name already exists' });
                  }
+                 
                 const productImages = req.files.map(file => '/uploads/' + file.filename);
 
                 const newProduct = new Product({
@@ -77,7 +84,8 @@ exports.addProduct = (req, res) => {
                 });
 
                 await newProduct.save();
-                return res.redirect("/admin/product?success=Product added successfully");
+                // return res.redirect("/admin/product?success=Product added successfully");
+                return res.status(200).json({ success: 'Product added successfully' });
             } catch (error) {
                 console.error('Error adding product:', error);
                 return res.redirect("/admin/product?error=Error adding product");
@@ -91,7 +99,8 @@ exports.editProduct =async (req, res) => {
     upload(req, res, async (err) => {
         if (err) {
             console.error('Error uploading files:', err);
-            return res.redirect('/admin/product?error=Error uploading files');
+           // return res.redirect('/admin/product?error=Error uploading files');
+           return res.status(500).json({ error: 'Error uploading files' });
         } else {
             try {
                 const { productName, description, category, regularPrice, salePrice, productOffer, quantity, removedImages } = req.body;
@@ -120,10 +129,12 @@ exports.editProduct =async (req, res) => {
                 }
 
                 await product.save();
-                return res.redirect('/admin/product?success=Product updated successfully');
+                //return res.redirect('/admin/product?success=Product updated successfully');
+                return res.status(200).json({success:"Product Updated Successfully"})
             } catch (error) {
                 console.error('Error editing product:', error);
-                return res.redirect('/admin/product?error=Error editing product');
+               // return res.redirect('/admin/product?error=Error editing product');
+                return res.status(500).json({error:"error in updating products"})
             }
         }
     });

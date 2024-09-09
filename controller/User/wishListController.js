@@ -98,6 +98,27 @@ exports.addToWishlist = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+// exports.removeFromWishlist = async (req, res) => {
+//     try {
+//         const { productId } = req.body;
+//         const userId = req.user._id;
+
+//         // Find the user's wishlist and remove the item
+//         const wishlist = await Wishlist.findOne({ userId: userId });
+//         if (!wishlist) {
+//             return res.status(404).json({ success: false, message: 'Wishlist not found' });
+//         }
+
+//         // Filter out the product that matches the productId
+//         wishlist.products = wishlist.products.filter(item => item.productId.toString() !== productId);
+//         await wishlist.save();
+
+//         res.json({ success: true, message: 'Product removed from wishlist' });
+//     } catch (error) {
+//         console.error('Error removing from wishlist:', error);
+//         res.status(500).json({ success: false, message: 'Server error' });
+//     }
+// };
 exports.removeFromWishlist = async (req, res) => {
     try {
         const { productId } = req.body;
@@ -113,7 +134,11 @@ exports.removeFromWishlist = async (req, res) => {
         wishlist.products = wishlist.products.filter(item => item.productId.toString() !== productId);
         await wishlist.save();
 
-        res.json({ success: true, message: 'Product removed from wishlist' });
+        // Update the wishlist count in the session after removing the product
+        req.session.wishlistCount = wishlist.products.length;
+
+        // Send the updated wishlist count back to the client
+        res.json({ success: true, wishlistCount: req.session.wishlistCount, message: 'Product removed from wishlist' });
     } catch (error) {
         console.error('Error removing from wishlist:', error);
         res.status(500).json({ success: false, message: 'Server error' });

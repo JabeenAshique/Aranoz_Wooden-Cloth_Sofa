@@ -89,11 +89,9 @@
                             <tr>
                                 <th>Product Image</th>
                                 <th>Product Name</th>
-                                <th>Description</th>
                                 <th>Category</th>
                                 <th>Regular Price</th>
-                                <th>Sales</th>
-                                <th>Offer</th>
+                               
                                 <th>Quantity</th>
                                 <th>Action</th>
                             </tr>
@@ -109,12 +107,12 @@
                                         <% } %>
                                     </td>
                                     <td><%= product.productName %></td>
-                                    <td><%= product.description %></td>
+                                  
                                     <td><%= product.category ? product.category.name : 'No Category' %></td>
 
                                     <td><%= product.regularPrice %></td>
-                                    <td><%= product.salePrice %></td>
-                                    <td><%= product.productOffer %></td>
+                                    
+                                    
                                     <td><%= product.quantity %></td>
                                     <td>
                                         <a href="/admin/product/edit/<%= product._id %>" class="btn btn-warning">Edit</a>

@@ -10,16 +10,16 @@
     <link rel="stylesheet" href="/css/dashboard.css">
     <style>
         .navbar.bg-light {
-            background-color: #569c79 !important;
+            background-color: #ffffff !important;
         }
         .offcanvas.bg-light {
-            background-color: #569c79 !important;
+            background-color: #ffffff !important;
         }
         .navbar-light .navbar-nav .nav-link {
-            color: #ffffff !important;
+            color: #b0aaaa !important;
         }
         .offcanvas .navbar-nav .nav-link {
-            color: #ffffff !important;
+            color: #b0aaaa !important;
         }
         main {
             margin-top: 56px; /* Adjust this based on your navbar height */
@@ -58,7 +58,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <h2>Category Management</h2>
-                   
+<!--                    
                     <form id="category-form" action="<%= editCategory ? '/admin/category/edit/' + editCategory._id : '/admin/category/add' %>" method="POST" onsubmit="return validateForm()">
                         <div class="mb-3">
                             <label for="name" class="form-label">Category Name</label>
@@ -78,15 +78,47 @@
 
                         </div>
                         <button type="submit" class="btn btn-primary"><%= editCategory ? 'Update Category' : 'Add Category' %></button>
-                    </form>
+                    </form> -->
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                        Add Category
+                    </button>
 
-                    Categories List
+                    <!-- Modal for Add Category -->
+                    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="addCategoryModalLabel"><%= editCategory ? 'Edit Category' : 'Add Category' %></h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="category-form" action="<%= editCategory ? '/admin/category/edit/' + editCategory._id : '/admin/category/add' %>" method="POST" onsubmit="return validateForm()">
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">Category Name</label>
+                                            <input type="text" class="form-control" id="name" name="name" value="<%= editCategory ? editCategory.name : '' %>" required>
+                                            <div id="name-error" class="error-message">Name cannot start with an underscore or space.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="description" class="form-label">Description</label>
+                                            <input type="text" class="form-control" id="description" name="description" value="<%= editCategory ? editCategory.description : '' %>" required>
+                                            <div id="description-error" class="error-message">Description cannot start with an underscore or space.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="categoryOffer" class="form-label">Offer</label>
+                                            <input type="number" class="form-control" id="categoryOffer" name="categoryOffer" value="<%= editCategory ? editCategory.categoryOffer : '' %>" required>
+                                            <div id="offer-error" class="error-message">Offer value cannot be negative.</div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary"><%= editCategory ? 'Update Category' : 'Add Category' %></button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <h3 class="mt-5">Categories</h3>
                     <table class="table table-striped">
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Description</th>
                                 <th>Offer</th>
                                 <th>Actions</th>
                             </tr>
@@ -95,10 +127,42 @@
                             <% categories.forEach(category => { %>
                                 <tr>
                                     <td><%= category.name %></td>
-                                    <td><%= category.description %></td>
+                                    
                                     <td><%= category.categoryOffer %></td>
                                     <td>
-                                        <a href="/admin/category/edit/<%= category._id %>" class="btn btn-warning">Edit</a>
+                                        <!-- <a href="/admin/category/edit/<%= category._id %>" class="btn btn-warning">Edit</a> -->
+                                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editCategoryModal-<%= category._id %>">
+                                            Edit
+                                        </button>
+                    
+                                        <!-- Edit Modal -->
+                                        <div class="modal fade" id="editCategoryModal-<%= category._id %>" tabindex="-1" aria-labelledby="editCategoryModalLabel-<%= category._id %>" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="editCategoryModalLabel-<%= category._id %>">Edit Category</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <form action="/admin/category/edit/<%= category._id %>" method="POST">
+                                                            <div class="mb-3">
+                                                                <label for="name-<%= category._id %>" class="form-label">Category Name</label>
+                                                                <input type="text" class="form-control" id="name-<%= category._id %>" name="name" value="<%= category.name %>" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="description-<%= category._id %>" class="form-label">Description</label>
+                                                                <input type="text" class="form-control" id="description-<%= category._id %>" name="description" value="<%= category.description %>" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="categoryOffer-<%= category._id %>" class="form-label">Offer</label>
+                                                                <input type="number" class="form-control" id="categoryOffer-<%= category._id %>" name="categoryOffer" value="<%= category.categoryOffer %>" required>
+                                                            </div>
+                                                            <button type="submit" class="btn btn-primary">Update Category</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <form class="toggle-category-form" action="/admin/category/toggle/<%= category._id %>" method="POST" style="display:inline;">
                                             <button type="submit" class="btn btn-<%= category.isListed ? 'danger' : 'success' %>">
                                                 <%= category.isListed ? 'Unlist' : 'List' %>
@@ -125,12 +189,13 @@
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="/js/jquery-1.12.1.min.js"></script>
-    <script src="/js/popper.min.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/dataTables.bootstrap5.min.js"></script>
-    <script src="/js/dashboard.js"></script>
+     <!-- Bootstrap JS, Popper.js, and necessary scripts -->
+     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+     <script src="/js/jquery-1.12.1.min.js"></script>
+     <script src="/js/dataTables.bootstrap5.min.js"></script>
+     <script src="/js/dashboard.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);

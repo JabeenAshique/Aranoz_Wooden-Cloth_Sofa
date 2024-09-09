@@ -234,6 +234,9 @@
                         // Remove the product row from the table
                         const row = element.closest('tr');
                         row.parentNode.removeChild(row);
+                         // Update the wishlist count in the UI
+                    const wishlistCountElement = document.getElementById('wishlist-count');
+                    wishlistCountElement.innerText = data.wishlistCount || 0;
                     } else {
                         Swal.fire({
                             icon: 'error',

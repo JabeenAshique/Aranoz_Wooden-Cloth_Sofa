@@ -120,6 +120,7 @@ const Category = require('../../models/categorySchema');
 // Get the category management page
 exports.getCategoryPage = async (req, res) => {
     try {
+        
         const page = parseInt(req.query.page) || 1;
         const limit = 10; // Number of categories per page
 

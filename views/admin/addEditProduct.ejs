@@ -115,7 +115,7 @@
                       <div class="invalid-feedback">Product images are required.</div>
                       <div id="new-image-container"></div>
                   </div> -->
-                  <div class="form-group">
+                  <!-- <div class="form-group">
                     <label for="productImage">Product Images</label>
                     <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" multiple>
                     <div class="invalid-feedback">Product images are required.</div>
@@ -126,7 +126,7 @@
                         </div>
                     </div>
                     <div id="new-image-container"></div>
-                </div>
+                </div> -->
                 
                   <% if (product && product.productImage && product.productImage.length > 0) { %>
                       <input type="hidden" id="removedImages" name="removedImages" value="">
@@ -139,6 +139,30 @@
                           <% }) %>
                       </div>
                   <% } %>
+                  <!-- <div class="form-group">
+                    <label for="productImage">Product Images</label>
+                    <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" multiple>
+                    <div class="invalid-feedback">Product images are required.</div>
+                    <div id="crop-container" style="display: none;">
+                        <img id="image-to-crop" src="" alt="Image to crop" style="max-width: 100%;">
+                        <div>
+                            <button type="button" id="cropImageBtn" class="btn btn-primary">Crop Image</button>
+                        </div>
+                    </div>
+                    <div id="new-image-container"></div>
+                </div> -->
+                <div class="form-group">
+                    <label for="productImage">Product Images</label>
+                    <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" multiple>
+                    <div id="crop-container" style="display: none;">
+                        <img id="image-to-crop" src="" alt="Image to crop" style="max-width: 100%;">
+                        <div>
+                            <button type="button" id="cropImageBtn" class="btn btn-primary">Crop Image</button>
+                        </div>
+                    </div>
+                    <div id="new-image-container"></div>
+                </div>
+                
                     <button type="submit" class="btn btn-primary"><%= product ? 'Update Product' : 'Add Product' %></button>
                 </form>
                 <div class="toast-container position-fixed p-3 bottom-0" style="top: 400px; right: 0; z-index: 1055;">
@@ -219,12 +243,13 @@
                 document.getElementById('image-' + index).remove();
             });
         });
-
+      });
         let cropper;
 const imageInput = document.getElementById('productImage');
 const cropContainer = document.getElementById('crop-container');
 const imageToCrop = document.getElementById('image-to-crop');
 const newImageContainer = document.getElementById('new-image-container');
+let croppedImages = []; 
 
 imageInput.addEventListener('change', function(event) {
     const files = event.target.files;
@@ -234,47 +259,107 @@ imageInput.addEventListener('change', function(event) {
             imageToCrop.src = e.target.result;
             cropContainer.style.display = 'block';
 
-            // Initialize Cropper.js
+            // Initialize Cropper.js with minimal settings
             if (cropper) {
                 cropper.destroy();
             }
             cropper = new Cropper(imageToCrop, {
-                aspectRatio: 1, // Set this to whatever aspect ratio you need
+                aspectRatio: 1,
                 viewMode: 1,
-                preview: '.img-preview'
             });
-        }
+        };
         reader.readAsDataURL(files[0]);
     }
 });
-      });
+
 document.getElementById('cropImageBtn').addEventListener('click', function() {
     const canvas = cropper.getCroppedCanvas({
-        width: 150, // Specify the dimensions for the cropped image
-        height: 150
+        width: 300,
+        height: 300
     });
 
-    // Convert the cropped canvas to a Blob and append it to FormData
+    // Convert the canvas to a Blob and store it
     canvas.toBlob(function(blob) {
         const newImage = URL.createObjectURL(blob);
         const div = document.createElement('div');
         div.classList.add('img-thumbnail-wrapper');
         div.innerHTML = `
-            <img src="${newImage}" alt="Cropped Image" class="img-thumbnail" style="width: 150px; height: auto;">
+            <img src="${newImage}" alt="Cropped Image" class="img-thumbnail" style="width: 150px;">
             <button type="button" class="btn btn-danger btn-sm remove-new-image">Remove</button>
         `;
         newImageContainer.appendChild(div);
-        
-        // Add the cropped image to FormData to upload it later
-        const formData = new FormData();
-        formData.append('croppedImage', blob, 'cropped-image.png');
 
-        // Now you can use formData in your form submission
+        // Store the cropped image blob in an array
+        croppedImages.push(blob);
+         // Add remove button functionality
+         div.querySelector('.remove-new-image').addEventListener('click', function() {
+            // Remove image from UI
+            newImageContainer.removeChild(div);
+
+            // Remove the corresponding image blob from the array
+            const index = Array.from(newImageContainer.children).indexOf(div);
+            croppedImages.splice(index, 1);
+        });
     }, 'image/png');
+    
+});
+
+// Handle form submission to upload all cropped images at once
+
+//     fetch(this.action, {
+//     method: 'POST',
+//     body: formData
+// })
+// .then(response => {
+//     if (!response.ok) {
+//         throw new Error('Error submitting form');
+//     }
+//     return response.json();
+// })
+// .then(data => {
+//     console.log('Product and images uploaded:', data);
+//     if (data.success) {
+//         // Optionally redirect or show success message
+//         window.location.href = '/admin/product'; // Adjust as needed
+//     }
+// })
+// .catch(error => {
+//     console.error('Error uploading product and images:', error);
+// });
+
+// });
+document.getElementById('productForm').addEventListener('submit', function(event) {
+    event.preventDefault();  // Prevent default form submission
+
+    const formData = new FormData(this);  // Collect the form data
+
+    // Append all cropped images to the form data
+    croppedImages.forEach((image, index) => {
+        formData.append('productImage', image, `cropped-image-${index}.png`);
+    });
+
+    fetch(this.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json()) // Parse JSON response
+    .then(data => {
+        console.log('Product and images uploaded:', data);
+        if (data.success) {
+            // Optionally redirect or show success message
+            alert('Product saved successfully!');
+            window.location.href = '/admin/product'; // Redirect to product page
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading product and images:', error);
+    });
 });
 
 </script>
-</script>
+
 
 </body>
 </html>

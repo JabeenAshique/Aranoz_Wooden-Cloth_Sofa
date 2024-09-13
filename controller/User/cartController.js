@@ -30,8 +30,10 @@ const addToCart = async (req, res) => {
       // Check if the product already exists in the cart
       const cartItem = user.cart.find(item => item.productId.toString() === productId);
       if (cartItem) {
-        cartItem.quantity += parseInt(quantity);
+        // If the product already exists in the cart, return an error response
+        return res.json({ success: false, message: 'Product already in cart' });
       } else {
+        // Add new item to cart
         user.cart.push({ productId, quantity });
       }
   
@@ -46,33 +48,45 @@ const addToCart = async (req, res) => {
       console.error('Error adding to cart:', error);
       res.status(500).json({ success: false, message: 'Server error' });
     }
-  };
-  
-
-
+  }
 const loadCartPage = async (req, res) => {
-    try {
-        const userId = req.user._id; // Assuming you have user authentication and the user ID is available in req.user
-        const wishlistCount = req.session.wishlistCount || 0;
-        const cartCount = req.session.cartCount || 0;
-        // const user = await User.findById(userId).populate('cart.productId');
-        const user = await User.findById(userId)
-    .populate({
-        path: 'cart.productId',
-        match: { isBlocked: false } // Only populate products that are not blocked
-    });
+  try {
+      const userId = req.user._id; // Assuming you have user authentication and the user ID is available in req.user
+      const wishlistCount = req.session.wishlistCount || 0;
 
-        const cartItems = user.cart.map(item => ({
-            product: item.productId,
-            quantity: item.quantity,
-            total: item.quantity * item.productId.salePrice // Calculate total price for each item
-        }));
+      // Fetch user with cart products, filtering out blocked products
+      const user = await User.findById(userId)
+          .populate({
+              path: 'cart.productId',
+              match: { isBlocked: false } // Only fetch products that are not blocked
+          });
 
-        res.render('cart', { cartItems,cartCount,wishlistCount });
-    } catch (error) {
-        console.error('Error fetching cart details:', error);
-        res.status(500).send('Server Error');
-    }
+      // Filter valid cart items (products that exist and are not blocked)
+      const validCartItems = user.cart.filter(item => item.productId);
+
+      // If blocked items exist, remove them from the cart and update the database
+      if (validCartItems.length !== user.cart.length) {
+          // Update user's cart in the database
+          user.cart = validCartItems;
+          await user.save();
+      }
+
+      // Update the cart session count to reflect the valid items only
+      req.session.cartCount = validCartItems.length;
+
+      // Prepare the cart items for rendering
+      const cartItems = validCartItems.map(item => ({
+          product: item.productId,
+          quantity: item.quantity,
+          total: item.quantity * item.productId.salePrice // Calculate total price for each item
+      }));
+
+      // Render the cart page with valid cart items, cart count, and wishlist count
+      res.render('cart', { cartItems, cartCount: req.session.cartCount, wishlistCount });
+  } catch (error) {
+      console.error('Error fetching cart details:', error);
+      res.status(500).send('Server Error');
+  }
 };
 
 const updateCartQuantity = async (req, res) => {

@@ -1,0 +1,126 @@
+.pagination .page-item.active .page-link {
+    color: #000000;
+    
+}
+
+.pagination .page-item .page-link {
+    color: #000000;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.pagination .page-item {
+    margin-right: 10px;
+}
+a{
+    text-decoration: none;
+}
+
+.price_rangs_aside {
+background-color: #f9f9f9; /* Adjust to your background color */
+padding: 20px;
+border-radius: 10px;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.l_w_title h3 {
+color: #333333; /* Adjust to your text color */
+font-weight: 700;
+}
+
+.range_item {
+margin-top: 15px;
+}
+
+.price_text p {
+font-weight: bold;
+color: #333333; /* Adjust to your text color */
+}
+
+.price_value input {
+background-color: #ffffff; /* Adjust to your input background color */
+border: 1px solid #dddddd; /* Adjust to your border color */
+border-radius: 5px;
+padding: 5px 10px;
+margin: 0 5px;
+color: #333333; /* Adjust to your text color */
+width: 60px;
+text-align: center;
+}
+
+.apply-filter-btn {
+background-color: #ff507c;; /* Adjust to your primary button color */
+color: #ffffff;
+border: none;
+border-radius: 25px;
+padding: 10px 20px;
+font-weight: bold;
+cursor: pointer;
+margin-top: 20px;
+width: 100%;
+transition: background-color 0.3s ease;
+}
+
+.apply-filter-btn:hover {
+background-color: #ff285e; /* Adjust to a slightly darker shade of the primary button color */
+}
+/* Styling for buttons */
+.add-to-cart-btn,
+.add-to-wishlist-btn {
+background: none;
+border: 2px solid #ff507c; /* Pink color */
+color: #ff507c; /* Pink color */
+padding: 5px 10px;
+border-radius: 4px;
+cursor: pointer;
+transition: all 0.3s ease;
+}
+
+.add-to-cart-btn:hover,
+.add-to-wishlist-btn:hover {
+background-color: #ff507c;
+color: #fff;
+}
+
+.add-to-wishlist-btn.active {
+color: #c82333; /* Red color */
+border-color: #c82333; /* Red color */
+}
+
+.add-to-wishlist-btn.active:hover {
+background-color: #c82333;
+color: #fff;
+}
+
+
+
+/* Hide price filter, sort options, and pagination on screens smaller than 768px */
+@media (max-width: 768px) {
+    /* Hide price filter */
+    .price_rangs_aside {
+        display: none;
+    }
+    
+    /* Hide sorting options */
+    .single_product_menu {
+        display: none;
+    }
+
+    /* Hide pagination */
+    .pagination_container,
+    .pagination {
+        display: none;
+    }
+
+    /* If you want to hide the entire product top bar (sort, search, etc.) */
+    .product_top_bar {
+        display: none;
+    }
+}

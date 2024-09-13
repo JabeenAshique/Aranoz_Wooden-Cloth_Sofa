@@ -4,8 +4,6 @@ const User = require("../../models/categorySchema");
 const Product = require('../../models/productSchema');
 const Category=require ('../../models/categorySchema') 
 const Order = require('../../models/orderSchema');
-const moment = require('moment');
-const { name } = require("ejs");
 
 // Render admin login page
 exports.getAdminLogin = (req, res) => {
@@ -24,186 +22,159 @@ exports.postAdminLogin = (req, res) => {
     }
 };
 
-// Render admin dashboard
-// exports.getAdminDashboard = async (req, res) => {
-//     try {
-//         // Fetch best-selling products for the dashboard
-//         const bestSellingProducts = await Product.find().sort({ productName: -1 }).limit(10);
-//         const bestsellingCategory=await category.find().sort({name:-1}).limit(10)
-//         // Render the dashboard with the bestSellingProducts data
-//         res.render('dashboard', { bestSellingProducts,bestsellingCategory });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).send('Server Error');
-//     }
-// };// Render admin dashboard
-// Render admin dashboard
-// Admin Dashboard Sales API for different time periods
+
+function fillMissingPeriods(data, timePeriod, fieldName) {
+    let filledData = [];
+    let length = 12;  // Default is monthly (12 months)
+
+    if (timePeriod === "weekly") {
+        length = 52;  // For weekly data, fill up 52 weeks
+    } else if (timePeriod === "yearly") {
+        length = 10;  // For example, assume last 10 years
+    }
+
+    // Fill the array with default values of 0
+    for (let i = 1; i <= length; i++) {
+        let found = data.find(item => item._id === i);
+        if (found) {
+            filledData.push(found[fieldName]);  // Use the specific field name
+        } else {
+            filledData.push(0);  // Fill missing periods with 0
+        }
+    }
+
+    return filledData;
+}
+
+// Get sales statistics by time period
 async function getSalesStatistics(SalestimePeriod) {
     let groupId;
-    
+
     if (SalestimePeriod === "yearly") {
-        groupId = { $year: "$createdOn" };  // Group by year
+        groupId = { $year: "$createdOn" };
     } else if (SalestimePeriod === "monthly") {
-        groupId = { $month: "$createdOn" };  // Group by month
+        groupId = { $month: "$createdOn" };
     } else if (SalestimePeriod === "weekly") {
-        groupId = { $isoWeek: "$createdOn" };  // Group by ISO week
+        groupId = { $isoWeek: "$createdOn" };
     }
 
     const sales = await Order.aggregate([
         {
             $group: {
-                _id: groupId,  // Group by the chosen time period
-                totalSales: { $sum: "$finalAmount" }  // Sum total sales
+                _id: groupId,
+                totalSales: { $sum: "$finalAmount" }
             }
         },
         { $sort: { _id: 1 } }
     ]);
 
-    return sales;
+    return fillMissingPeriods(sales, SalestimePeriod, 'totalSales');
 }
+
+// Get users data by time period
 async function getUsersData(SalestimePeriod) {
     let groupId;
-    let totalWeeks = 12; // Default array length for monthly
 
     if (SalestimePeriod === "yearly") {
-        groupId = { $year: "$createdOn" };  // Group by year
+        groupId = { $year: "$createdOn" };
     } else if (SalestimePeriod === "monthly") {
-        groupId = { $month: "$createdOn" };  // Group by month
+        groupId = { $month: "$createdOn" };
     } else if (SalestimePeriod === "weekly") {
-        groupId = { $isoWeek: "$createdOn" };  // Group by week
-        totalWeeks = 52; // Weekly, so we'll use 52 weeks in our array
+        groupId = { $isoWeek: "$createdOn" };
     }
 
     const users = await Order.aggregate([
         {
             $group: {
-                _id: groupId,  // Group by the selected period (year, month, or week)
-                uniqueUsers: { $addToSet: "$userId" }  // Add unique users who placed orders in that period
+                _id: groupId,
+                uniqueUsers: { $addToSet: "$userId" }
             }
         },
         {
             $project: {
                 _id: 1,
-                userCount: { $size: "$uniqueUsers" }  // Count the unique users
-            }
-        },
-        {
-            $sort: { _id: 1 }
-        }
-    ]);
-
-    const usersData = Array(totalWeeks).fill(0);  // Initialize an array for 12 months or 52 weeks
-
-    users.forEach(user => {
-        usersData[user._id - 1] = user.userCount;  // Populate the array with user counts
-    });
-
-    return usersData;  // Return the data as an array for the chart
-}
-
-async function getProductsData(SalestimePeriod) {
-    let groupId;
-    
-    if (SalestimePeriod === "yearly") {
-        groupId = { $year: "$createdOn" };  // Group by year
-    } else if (SalestimePeriod === "monthly") {
-        groupId = { $month: "$createdOn" };  // Group by month
-    } else if (SalestimePeriod === "weekly") {
-        groupId = { $isoWeek: "$createdOn" };  // Group by ISO week
-    }
-
-    const products = await Order.aggregate([
-        { $unwind: "$orderedItems" },  // Unwind the orderedItems array
-        {
-            $group: {
-                _id: { $month: "$createdOn" },  // Group by month
-                totalProducts: { $sum: "$orderedItems.quantity" }  // Sum the quantity of products ordered
+                userCount: { $size: "$uniqueUsers" }
             }
         },
         { $sort: { _id: 1 } }
     ]);
 
-    const productsData = Array(12).fill(0);  // Initialize an array with 12 months of zeroes
-
-    products.forEach(product => {
-        productsData[product._id - 1] = product.totalProducts;  // Populate the corresponding month with total products
-    });
-
-    return productsData;  // Return an array of 12 values (product quantity per month)
+    return fillMissingPeriods(users, SalestimePeriod, 'userCount');
 }
+
+// Get products data by time period
+async function getProductsData(SalestimePeriod) {
+    let groupId;
+
+    if (SalestimePeriod === "yearly") {
+        groupId = { $year: "$createdOn" };
+    } else if (SalestimePeriod === "monthly") {
+        groupId = { $month: "$createdOn" };
+    } else if (SalestimePeriod === "weekly") {
+        groupId = { $isoWeek: "$createdOn" };
+    }
+
+    const products = await Order.aggregate([
+        { $unwind: "$orderedItems" },
+        {
+            $group: {
+                _id: groupId,
+                totalProducts: { $sum: "$orderedItems.quantity" }
+            }
+        },
+        { $sort: { _id: 1 } }
+    ]);
+
+    return fillMissingPeriods(products, SalestimePeriod, 'totalProducts');
+}
+
+// Get orders data by time period
 async function getOrdersData(SalestimePeriod) {
     let groupId;
-    
+
     if (SalestimePeriod === "yearly") {
-        groupId = { $year: "$createdOn" };  // Group by year
+        groupId = { $year: "$createdOn" };
     } else if (SalestimePeriod === "monthly") {
-        groupId = { $month: "$createdOn" };  // Group by month
+        groupId = { $month: "$createdOn" };
     } else if (SalestimePeriod === "weekly") {
-        groupId = { $isoWeek: "$createdOn" };  // Group by ISO week
+        groupId = { $isoWeek: "$createdOn" };
     }
 
     const orders = await Order.aggregate([
         {
             $group: {
-                _id: { $month: "$createdOn" },  // Group by month
-                totalOrders: { $sum: 1 }  // Count the number of orders
+                _id: groupId,
+                totalOrders: { $sum: 1 }
             }
         },
         { $sort: { _id: 1 } }
     ]);
 
-    const ordersData = Array(12).fill(0);  // Initialize an array with 12 months of zeroes
-
-    orders.forEach(order => {
-        ordersData[order._id - 1] = order.totalOrders;  // Populate the corresponding month with total orders
-    });
-
-    return ordersData;  // Return an array of 12 values (order count per month)
+    return fillMissingPeriods(orders, SalestimePeriod, 'totalOrders');
 }
-// async function getRevenueByCategory() {
-//     const revenue = await Order.aggregate([
-//         { $unwind: "$orderedItems" },  // Unwind the orderedItems array
-//         {
-//             $lookup: {
-//                 from: "products",  // Join with the Product collection
-//                 localField: "orderedItems.product",
-//                 foreignField: "_id",
-//                 as: "productDetails"
-//             }
-//         },
-//         { $unwind: "$productDetails" },  // Unwind the productDetails array
-//         {
-//             $group: {
-//                 _id: "$productDetails.category",  // Group by product category
-//                 totalRevenue: { $sum: "$orderedItems.price" }  // Sum the price
-//             }
-//         }
-//     ]);
 
-//     return revenue.map(r => ({ category: r._id, totalRevenue: r.totalRevenue }));  // Return revenue by category
-// }
+
 async function getProductsSoldByPeriod(timePeriod) {
     let groupId;
     
     // Determine the grouping based on the selected time period
     if (timePeriod === "yearly") {
-        groupId = { $year: "$createdOn" };  // Group by year
+        groupId = { $year: "$createdOn" };  
     } else if (timePeriod === "monthly") {
-        groupId = { $month: "$createdOn" };  // Group by month
+        groupId = { $month: "$createdOn" };  
     } else if (timePeriod === "weekly") {
-        groupId = { $isoWeek: "$createdOn" };  // Group by ISO week
+        groupId = { $isoWeek: "$createdOn" };  
     }
 
     const productsSold = await Order.aggregate([
-        { $unwind: "$orderedItems" },  // Unwind the orderedItems array
+        { $unwind: "$orderedItems" },  
         {
             $group: {
-                _id: groupId,  // Group by the chosen time period (year, month, or week)
-                totalProductsSold: { $sum: "$orderedItems.quantity" }  // Sum the quantity of products sold
+                _id: groupId,  
+                totalProductsSold: { $sum: "$orderedItems.quantity" }  
             }
         },
-        { $sort: { _id: 1 } }  // Sort by period (ascending)
+        { $sort: { _id: 1 } }  
     ]);
 
     return productsSold;
@@ -211,17 +182,22 @@ async function getProductsSoldByPeriod(timePeriod) {
 
 exports.getAdminDashboard = async (req, res) => {
     try {
-
         const SalestimePeriod = req.query.salesTimePeriod || 'monthly';
-        //const salesPerMonth = await getSalesPerMonth();
         const usersData = await getUsersData(SalestimePeriod);
         const productsData = await getProductsData(SalestimePeriod);
         const ordersData = await getOrdersData(SalestimePeriod);
-        const timePeriod = req.query.timePeriod || 'monthly'; // Get timePeriod from query, default to monthly
-        //const SalestimePeriod = req.query.salesTimePeriod || 'monthly';  // Default to 'monthly' if no time period selected
+        const timePeriod = req.query.timePeriod || 'monthly'; 
         const salesStatistics = await getSalesStatistics(SalestimePeriod);
-
         const productsSoldByPeriod = await getProductsSoldByPeriod(timePeriod);
+        console.log("Products Sold By Period:", productsSoldByPeriod);
+
+// Log the actual data
+console.log('Sales Data:', salesStatistics);
+console.log('Users Data:', usersData);
+console.log('Products Data:', productsData);
+console.log('Orders Data:', ordersData);
+
+        
         // Top 10 Best Selling Products
         const topSellingProducts = await Order.aggregate([
             { $unwind: "$orderedItems" },
@@ -250,24 +226,17 @@ exports.getAdminDashboard = async (req, res) => {
             { _id: { $in: topSellingCategories.map(c => c._id) }}, 
             { name: 1, _id: 1 } // Project only the name field and _id
         );
-
         // Summary Stats
         const totalCustomers = await User.countDocuments();
         const totalOrders = await Order.countDocuments();
         const totalProducts = await Product.countDocuments();
-        const totalTransaction = await Order.aggregate([
-            { $group: { _id: null, total: { $sum: "$finalAmount" } } }
-        ]).exec();
-
         res.render('dashboard', {
             products,
             topSellingCategories,
             totalCustomers,
             totalOrders,
             totalProducts,
-            totalTransaction: totalTransaction[0]?.total || 0,
-            topSellingProducts,
-            
+            topSellingProducts,            
             categories,
             salesData: JSON.stringify(salesStatistics),  // Sales data
             usersData: JSON.stringify(usersData),        // Users data

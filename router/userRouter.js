@@ -22,15 +22,12 @@ router.post('/Userlogin', userController.login);
 router.get('/logout', userController.logout);
 router.get('/product/:id', userController.getProductDetails);
 router.get('/shop', userController.loadShopPage);
-// Route to handle forgot password and send OTP
-// router.get('/forgot-password', forgotController.loadForgotPasswordPage);
-// router.post('/send-otp', forgotController.sendResetOtp);
-// router.post('/verify-otp', forgotController.forgot_verifyOtp);
 router.get('/email_verification', forgotController.getemail_verification);
 router.post('/forgot_verifyOtp', forgotController.send_ResetPasswordOtp);
 router.post('/resetverify-otp', forgotController.forgot_verifyOtp);
-// router.get('/reset-password', forgotController.loadResetPasswordPage);
- router.post('/reset-password', forgotController.resetPassword);
+router.post('/reset-password', forgotController.resetPassword);
+router.post('/product/:id/submit-review',authMiddlewares.ensureAuthenticated,userController.submitreview);
+//router.get('/product/:id/reviews',authMiddlewares.ensureAuthenticated,userController.getreview);
 //profile
 router.get('/profile',authMiddlewares.ensureAuthenticated,profileController.loadProfilePage);
 router.get('/updateProfile',authMiddlewares.ensureAuthenticated,profileController.loadUpdateProfilePage);

@@ -4,25 +4,111 @@ const Product = require("../../models/productSchema");
 const Category=require("../../models/categorySchema");
 const Wishlist=require("../../models/wishlistSchema");
 const Offer= require ("../../models/offerSchema");
+const Reviews= require("../../models/reviewSchema");
 const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
 const bcrypt = require('bcrypt');
 const loadHomepage = async (req, res) => {
     try {
-        const cartCount = req.session.cartCount || 0;
-        const products = await Product.find({ isBlocked: false }).exec(); // Ensure to fetch only non-blocked products
-        const categories = await Category.find().limit(4).exec();
-        const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
-            const product = await Product.findOne({ category: category._id, isBlocked: false }).exec();
-            return { category, product };
-        }));
 
-        res.render('home', { products, user: req.session.user,cartCount,categoriesWithProducts });
+        if (!req.session) {
+            // Redirect to the login page if the user is not logged in
+            return res.redirect('/Userlogin?message=Please login to view product details');
+        }
+        const wishlistCount = req.session.wishlistCount || 0;
+        const page = parseInt(req.query.page) || 1;
+        const limit = 9; // Adjust the limit as per  requirement
+        const sortOption = req.query.sort || 'default';
+        const searchQuery = req.query.search || ''; // Get the search query
+        const minPrice = parseInt(req.query.minPrice) || 0; // Get the minimum price, default is 0
+        const maxPrice = parseInt(req.query.maxPrice) || 1000000; // Get the maximum price, default is 10 lakh (1,000,000)
+        let sortCriteria = {};
+
+
+        // Define sorting criteria based on sortOption
+        switch (sortOption) {
+            case 'popularity':
+                sortCriteria = { popularity: -1 };
+                break;
+            case 'priceAsc':
+                sortCriteria = { salePrice: 1 };
+                break;
+            case 'priceDesc':
+                sortCriteria = { salePrice: -1 };
+                break;
+            case 'averageRatings':
+                sortCriteria = { averageRatings: -1 };
+                break;
+            case 'featured':
+                sortCriteria = { featured: -1 };
+                break;
+            case 'newArrivals':
+                sortCriteria = { createdAt: -1 };
+                break;
+            case 'az':
+                sortCriteria = { productName: 1 };
+                break;
+            case 'za':
+                sortCriteria = { productName: -1 };
+                break;
+            default:
+                sortCriteria = {};
+        }
+
+        const categoryFilter = req.query.category;
+        const categoryQuery = categoryFilter ? { category: categoryFilter } : {};
+         // Update the product query to include the search term
+         const productQuery = {
+            ...categoryQuery,
+            productName: { $regex: searchQuery, $options: 'i' }, // Case-insensitive search
+            salePrice: { $gte: minPrice, $lte: maxPrice }
+ // Apply price range filter
+        };
+
+        const products = await Product.find(productQuery)
+            .sort(sortCriteria)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .populate({
+                path: 'category',
+                match: { isBlocked: true }
+            })
+            .exec();
+            
+
+        const count = await Product.countDocuments(productQuery);
+        const totalPages = Math.ceil(count / limit);
+        const categories = await Category.find({isListed:true});
+       
+        
+         // Retrieve the user's wishlist
+         let wishlistItems = [];
+         if (req.user) {
+             const wishlist = await Wishlist.findOne({ userId: req.user._id }).populate('products.productId');
+             if (wishlist) {
+                 wishlistItems = wishlist.products.map(item => item.productId._id.toString());
+             }
+         }
+        res.render("home", {
+            products,
+            categories,
+            currentPage: page,
+            totalPages,
+            categoryFilter,
+            sortOption,
+            searchQuery,
+            minPrice,
+            maxPrice,
+            wishlistItems,
+            wishlistCount,
+            
+        });
     } catch (error) {
-        console.error('Error fetching products:', error);
-        res.status(500).send('Server Error');
+        console.error("Error fetching products:", error);
+        res.status(500).send("Server Error");
     }
 };
+
 
 const loadsignup = async (req, res) => {
     try {
@@ -48,15 +134,25 @@ const loadLoginpage = async (req, res) => {
 
 const getProductDetails = async (req, res) => {
     try {
+        if (!req.session.user) {
+            return res.redirect('/Userlogin?message=Please login to view product details');
+        }
         const productId = req.params.id;
         const currentDate = new Date();
         const product = await Product.findById(productId).populate("category");
-        // Assuming you are using session to store cartCount
         const cartCount = req.session.cartCount || 0;
         const wishlistCount = req.session.wishlistCount || 0;
         if (!product) {
             return res.status(404).send("Product not found");
         }
+        if (!product) {
+            // If product is not found, redirect to shop
+            return res.redirect('/shop');
+        }
+        if (product.isBlocked) {  
+            return res.redirect('/shop?message=This product is currently unavailable.');
+        }
+
          // Fetch offers that apply to the product's category or the product itself and are active on the current date
          const applicableOffers = await Offer.find({
             $or: [
@@ -93,10 +189,25 @@ console.log("Max Product Offer:", maxProductOffer);
             category: product.category._id, 
             _id: { $ne: productId } 
         }).limit(4);
+
+        let wishlistItems = [];
+        if (req.user) {
+            const wishlist = await Wishlist.findOne({ userId: req.user._id }).populate('products.productId');
+            if (wishlist) {
+                wishlistItems = wishlist.products.map(item => item.productId._id.toString());
+            }
+        }
+
+        // Fetch product reviews
+        const reviews = await Reviews.find({ product: productId }).populate('user', 'name');
+        
+        // Calculate the average rating
+        const averageRating = reviews.reduce((acc, curr) => acc + curr.rating, 0) / (reviews.length || 1);
+
         if (product.isBlocked) {
             res.render("pro_details", { product: null, relatedProducts, message: "This product is unavailable." });
         } else {
-            res.render("pro_details", { product, relatedProducts, message: null,finalOffer,cartCount,wishlistCount });
+            res.render("pro_details", { product, relatedProducts, message: null,finalOffer,cartCount,wishlistCount,reviews,averageRating,wishlistItems });
         }
         // res.render("pro_details", { product, relatedProducts });
     } catch (error) {
@@ -183,6 +294,9 @@ const loadShopPage = async (req, res) => {
         const maxPrice = parseInt(req.query.maxPrice) || 1000000; // Get the maximum price, default is 10 lakh (1,000,000)
         let sortCriteria = {};
 
+        if (!req.session.user) {
+            return res.redirect('/Userlogin?message=Please login to view product details');
+        }
         // Define sorting criteria based on sortOption
         switch (sortOption) {
             case 'popularity':
@@ -219,8 +333,8 @@ const loadShopPage = async (req, res) => {
          const productQuery = {
             ...categoryQuery,
             productName: { $regex: searchQuery, $options: 'i' }, // Case-insensitive search
-            salePrice: { $gte: minPrice, $lte: maxPrice }
- // Apply price range filter
+            salePrice: { $gte: minPrice, $lte: maxPrice },
+            isBlocked:false
         };
 
         const products = await Product.find(productQuery)
@@ -232,8 +346,8 @@ const loadShopPage = async (req, res) => {
                 match: { isBlocked: true }
             })
             .exec();
-            
 
+           
         const count = await Product.countDocuments(productQuery);
         const totalPages = Math.ceil(count / limit);
         const categories = await Category.find({isListed:true});
@@ -247,6 +361,7 @@ const loadShopPage = async (req, res) => {
                  wishlistItems = wishlist.products.map(item => item.productId._id.toString());
              }
          }
+
         res.render("shop", {
             products,
             categories,
@@ -261,6 +376,7 @@ const loadShopPage = async (req, res) => {
             cartCount,
             wishlistCount,
             
+            
         });
     } catch (error) {
         console.error("Error fetching products:", error);
@@ -269,27 +385,104 @@ const loadShopPage = async (req, res) => {
 };
 
 const loadMainPage = async (req, res) => {
-    try {
-        const cartCount = req.session.cartCount || 0;
-        const wishlistCount = req.session.wishlistCount || 0;
-        const categories = await Category.find().limit(4).exec();
-        const products = await Product.find({ isBlocked: false }).exec(); 
-        const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
-            const product = await Product.findOne({ category: category._id, isBlocked: false }).exec();
-            return { category, product };
-        }));
+        try {
 
-        // Render the page with the categories and their products
-        res.render('home1', { categoriesWithProducts,products,cartCount,wishlistCount });
-    } catch (error) {
-        console.error('Error fetching categories and products:', error);
-        res.status(500).send('Server Error');
+           
+            const cartCount = req.session.cartCount || 0;
+            const wishlistCount = req.session.wishlistCount || 0;
+            const page = parseInt(req.query.page) || 1;
+            const limit = 9; // Adjust the limit as per  requirement
+            const sortOption = req.query.sort || 'default';
+            const searchQuery = req.query.search || ''; // Get the search query
+            const minPrice = parseInt(req.query.minPrice) || 0; // Get the minimum price, default is 0
+            const maxPrice = parseInt(req.query.maxPrice) || 1000000; // Get the maximum price, default is 10 lakh (1,000,000)
+            let sortCriteria = {};
+    
+    
+            // Define sorting criteria based on sortOption
+            switch (sortOption) {
+                case 'popularity':
+                    sortCriteria = { popularity: -1 };
+                    break;
+                case 'priceAsc':
+                    sortCriteria = { salePrice: 1 };
+                    break;
+                case 'priceDesc':
+                    sortCriteria = { salePrice: -1 };
+                    break;
+                case 'averageRatings':
+                    sortCriteria = { averageRatings: -1 };
+                    break;
+                case 'featured':
+                    sortCriteria = { featured: -1 };
+                    break;
+                case 'newArrivals':
+                    sortCriteria = { createdAt: -1 };
+                    break;
+                case 'az':
+                    sortCriteria = { productName: 1 };
+                    break;
+                case 'za':
+                    sortCriteria = { productName: -1 };
+                    break;
+                default:
+                    sortCriteria = {};
+            }
+    
+            const categoryFilter = req.query.category;
+            const categoryQuery = categoryFilter ? { category: categoryFilter } : {};
+             // Update the product query to include the search term
+             const productQuery = {
+                ...categoryQuery,
+                productName: { $regex: searchQuery, $options: 'i' }, // Case-insensitive search
+                salePrice: { $gte: minPrice, $lte: maxPrice }
+     // Apply price range filter
+            };
+    
+            const products = await Product.find(productQuery)
+                .sort(sortCriteria)
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .populate({
+                    path: 'category',
+                    match: { isBlocked: true }
+                })
+                .exec();
+                
+    
+            const count = await Product.countDocuments(productQuery);
+            const totalPages = Math.ceil(count / limit);
+            const categories = await Category.find({isListed:true});
+           
+            
+             // Retrieve the user's wishlist
+             let wishlistItems = [];
+             if (req.user) {
+                 const wishlist = await Wishlist.findOne({ userId: req.user._id }).populate('products.productId');
+                 if (wishlist) {
+                     wishlistItems = wishlist.products.map(item => item.productId._id.toString());
+                 }
+             }
+            res.render("home1", {
+                products,
+                categories,
+                currentPage: page,
+                totalPages,
+                categoryFilter,
+                sortOption,
+                searchQuery,
+                minPrice,
+                maxPrice,
+                wishlistItems,
+                cartCount,
+                wishlistCount
+            });
+        } catch (error) {
+            console.error("Error fetching products:", error);
+            res.status(500).send("Server Error");
+        }
     }
-};
-
 //otp
-
-
 
 function generateOtp(){
     return Math.floor(100000+Math.random()*900000).toString()
@@ -499,6 +692,33 @@ const loadOtpPage = async (req, res) => {
         res.status(500).send("server.error");
     }
 };
+
+
+const submitreview= async (req, res) => {
+    const productId = req.params.id;
+    const { rating, review } = req.body;
+
+    const existingReview = await Reviews.findOne({ user: req.user._id, product: productId });
+
+    if (existingReview) {
+        // Update existing review and rating
+        existingReview.rating = rating;
+        existingReview.review = review;
+        await existingReview.save();
+    } else {
+        // Create a new review and rating
+        const newReview = new Reviews({
+            user: req.user._id,
+            product: productId,
+            rating: rating,
+            review: review
+        });
+        await newReview.save();
+    }
+
+    res.status(200).send('Review submitted');
+};
+
 module.exports = {
     
     loadsignup,
@@ -515,5 +735,7 @@ module.exports = {
     logout,
     generateOtp,
     sendVerificationEmail,
-    securePassword
+    securePassword,
+    submitreview,
+    
 };

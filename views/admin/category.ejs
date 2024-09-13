@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="/css/dashboard.css">
-    <style>
+    <!-- <style>
         .navbar.bg-light {
             background-color: #ffffff !important;
         }
@@ -48,7 +48,7 @@
             color: red;
             display: none;
         }
-    </style>
+    </style> -->
 </head>
 <body>
     <%- include('sidebar') %>
@@ -56,8 +56,8 @@
     <main class="mt-5 pt-3">
         <div class="container-fluid content">    
             <div class="row">
-                <div class="col-md-12">
-                    <h2>Category Management</h2>
+                <div class="col-md-12 pt-5">
+                    <h5>Category Management</h5>
 <!--                    
                     <form id="category-form" action="<%= editCategory ? '/admin/category/edit/' + editCategory._id : '/admin/category/add' %>" method="POST" onsubmit="return validateForm()">
                         <div class="mb-3">

@@ -20,12 +20,11 @@
   <link rel="stylesheet" href="../../css/flaticon.css">
   <link rel="stylesheet" href="../../css/themify-icons.css">
   <!-- font awesome CSS -->
-  <link rel="stylesheet" href="../../css/magnific-popup.css">
+  <link rel="stylesheet" href="css/magnific-popup.css">
   <!-- style CSS -->
   <link rel="stylesheet" href="../../css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-zoom/1.7.21/jquery.zoom.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
   <style>
   .main-image-container {
     text-align: center;
@@ -63,13 +62,195 @@
     animation: blink 1s infinite;
     font-weight: bold; /* Optional: to make the text stand out more */
 }
+/* Review Section Styling */
+.review-section-card {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.review-card {
+  border: none;
+  margin-bottom: 10px;
+}
+
+.review-card .card-body {
+  padding: 10px;
+}
+
+.reviews-summary a {
+  color: blue;
+  text-decoration: underline;
+}
+
+#more-link, #less-link {
+  color: blue;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 10px;
+  display: block;
+}
+
+/* Star filled color */
+.star-filled {
+  color: #FFD700; /* Gold color for filled stars */
+}
+
+/* Modal Styling */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 400px;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 90%;
+    padding: 10px;
+  }
+}
+/* Modal Styling */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1050;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.7); /* Transparent background */
+    transition: opacity 0.3s ease-in-out;
+}
+
+.modal-content {
+    position: relative;
+    margin: 10% auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Close button */
+.close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: #333;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close:hover {
+    color: red;
+}
+
+/* Modal animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Form styling inside the modal */
+.modal-content h2 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content form label {
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
+.modal-content form select,
+.modal-content form textarea,
+.modal-content form input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.modal-content form button {
+    background-color: #ff0077;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.modal-content form button:hover {
+    background-color: #db305e;
+}
+
+/* Modal Responsiveness */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 90%;
+        margin-top: 30%;
+    }
+}
+
 
 </style>
 </head>
 
 <body>
     <%- include('header') %>
-<
+
   <% if (product) { %>
   
 
@@ -116,11 +297,6 @@
                     <p class="blinking-text">Special Offer: <%= finalOffer %> Off</p>
                 <% } %>
             </h2>
-                <!-- <% if (product.productOffer > 0) { %>
-                  <p>Offer: <%= product.productOffer %>% off</p>
-              <% } %>  -->
-            
-           
                 <ul class="list">
                     <li>
                         <a class="active" href="#">
@@ -139,29 +315,15 @@
                     </li>
                 </ul>
                 <p><%= product.description %></p>
-                <div class="rating">
-                  <span class="fa fa-star checked"></span>
-                  <span class="fa fa-star checked"></span>
-                  <span class="fa fa-star checked"></span>
-                  <span class="fa fa-star"></span>
-                  <span class="fa fa-star"></span>
-                 
-                </div>
-                
+                <strong>Average Rating:</strong> <%= averageRating.toFixed(1) %> Stars
                 <div class="card_area d-flex justify-content-between align-items-center">
-                  <div class="product_count">
-                      <span class="inumber-decrement"> <i class="ti-minus"></i></span>
-                      <input id="quantity" class="input-number" type="text" value="1" min="1" max="<%= product.quantity %>">
-                      <span class="number-increment"> <i class="ti-plus"></i></span>
-                  </div>
+                 
+                    <button  class="btn_3 <%= wishlistItems.includes(product._id.toString()) ? 'active' : '' %>" 
+                        data-product-id="<%= product._id %>" 
+                        onclick="toggleWishlist(this, '<%= product._id %>')" >Add to wishlist</button>     
+                          
                   <button onclick="addToCart('<%= product._id %>')" class="btn_3"<% if (product.isBlocked) { %>disabled<% } %>>Add to Cart</button>
-                  <a href="#" class="like_us"> <i class="ti-heart"></i> </a>
               </div>
-                <div class="product-reviews">
-                    <h5>Reviews</h5>
-                    <p>John Doe: Great product!</p>
-                    <p>Jane Smith: Highly recommended.</p>
-                  </div>
             </div>
         </div>
     </div>
@@ -174,10 +336,117 @@
  <% } %>
 </div>
 <!--================End Single Product Area =================-->
- 
+<!-- Customer Reviews Section -->
+<!-- Customer Reviews Section -->
+<div class="container padding_top">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card review-section-card">
+          <div class="card-body">
+            <h3 class="font-weight-bold">Customer Reviews</h3>
+            <div class="reviews-summary d-flex justify-content-between">
+              <!-- Average rating stars -->
+              <span class="average-rating">
+                <% if (reviews.length > 0) { %>
+                  <% for (let i = 1; i <= 5; i++) { %>
+                    <% if (i <= Math.floor(averageRating)) { %>
+                      <i class="fas fa-star star-filled"></i>
+                    <% } else if (i === Math.ceil(averageRating)) { %>
+                      <i class="fas fa-star-half-alt star-filled"></i>
+                    <% } else { %>
+                      <i class="far fa-star"></i>
+                    <% } %>
+                  <% } %>
+                <% } %>
+              </span>
+              <span>Based on <%= reviews.length %> reviews</span>
+              <a href="#" id="openReviewModal">Write a review</a>
+            </div>
+  
+            <!-- Check if there are reviews -->
+            <% if (reviews.length > 0) { %>
+              <!-- Display the first review initially -->
+              <div class="card review-card" id="single-review">
+                <div class="card-body">
+                  <strong><%= reviews[0].user.name %></strong>
+                  <p><%= reviews[0].review %></p>
+                  <div class="rating">
+                    <% for (let i = 1; i <= 5; i++) { %>
+                      <% if (i <= reviews[0].rating) { %>
+                        <i class="fas fa-star star-filled"></i>
+                      <% } else { %>
+                        <i class="far fa-star"></i>
+                      <% } %>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+              <hr>
+  
+              <!-- Hidden reviews that will be shown when 'More' is clicked -->
+              <div id="all-reviews" style="display: none;">
+                <% reviews.forEach(function(review, index) { %>
+                  <% if (index > 0) { %> <!-- Skip the first review -->
+                    <div class="card review-card">
+                      <div class="card-body">
+                        <strong><%= review.user.name %></strong>
+                        <p><%= review.review %></p>
+                        <div class="rating">
+                          <% for (let i = 1; i <= 5; i++) { %>
+                            <% if (i <= review.rating) { %>
+                              <i class="fas fa-star star-filled"></i>
+                            <% } else { %>
+                              <i class="far fa-star"></i>
+                            <% } %>
+                          <% } %>
+                        </div>
+                      </div>
+                    </div>
+                    <hr>
+                  <% } %>
+                <% }); %>
+              </div>
+  
+              <!-- More/Less toggle links -->
+              <a href="#" id="more-link" onclick="toggleReviews(true); return false;">More</a>
+              <a href="#" id="less-link" style="display: none;" onclick="toggleReviews(false); return false;">Less</a>
+            <% } else { %>
+              <!-- No reviews yet -->
+              <p>No reviews yet. Be the first to write one!</p>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Write a Review Modal -->
+<div id="reviewModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Write a Review</h2>
+      <form id="review-form">
+        <input type="hidden" id="product-id" name="product-id" value="<%= product._id %>">
+        <label for="rating">Rate this product:</label>
+        <select id="rating" name="rating" required>
+          <option value="1">1 Star</option>
+          <option value="2">2 Stars</option>
+          <option value="3">3 Stars</option>
+          <option value="4">4 Stars</option>
+          <option value="5">5 Stars</option>
+        </select>
+  
+        <label for="review">Write a Review:</label>
+        <textarea id="review" name="review" required></textarea>
+  
+        <button class="btn_3" type="submit">Submit Review</button>
+      </form>
+    </div>
+  </div>
   <!-- product_list part start-->
-  <section class="product_list best_seller">
+  <section class="product_list best_seller  padding_top">
     <div class="container">
+
       <div class="row justify-content-center">
         <div class="col-lg-12">
           <div class="section_tittle text-center">
@@ -211,7 +480,7 @@
   <!-- jquery plugins here-->
   <!-- jquery -->
   <script>
-      function incrementQuantity(productId) {
+       function incrementQuantity(productId) {
     const quantityInput = document.getElementById(`quantity-${productId}`);
     const max = parseInt(quantityInput.max);
     if (quantityInput.value < max) {
@@ -229,9 +498,7 @@
 
     function addToCart(productId) {
         console.log('addToCart function called'); // Debug log
-        console.log('Product ID:', productId); // Debug log
-        const quantity = document.getElementById('quantity').value;
-        console.log('Quantity:', quantity); // Debug log
+        const quantity = 1; 
 
         fetch('/cart/add', {
             method: 'POST',
@@ -251,30 +518,236 @@
         .then(data => {
         console.log('Data received:', data); // Debug log
         if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: 'Product added to cart successfully!',
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
-                // const cartCountElement = document.getElementById('cart-count');
-                // const currentCount = parseInt(cartCountElement.innerText);
-                // cartCountElement.innerText = currentCount + parseInt(quantity);
-                 const cartCountElement = document.getElementById('cart-count');
-            cartCountElement.innerText = data.cartCount || 0; // Set cart count from session
-                // window.location.reload()
-            });
+        if (data.message === 'Product already in cart') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Warning',
+            text: 'This item is already in your cart!',
+          });
         } else {
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Product added to cart successfully!',
+            showConfirmButton: false,
+            timer: 1500,
+          }).then(() => {
+            const cartCountElement = document.getElementById('cart-count');
+            cartCountElement.innerText = data.cartCount || 0; // Set cart count from session
+          });
+        }
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: data.message || 'Failed to add product to cart',
+        });
+      }
+    })
+    .catch((error) => console.error('Error:', error));
+}
+//review 
+
+
+    const reviewForm = document.getElementById('review-form');
+if (reviewForm) {
+  reviewForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    // Add a check to make sure the element exists
+    const productIdElement = document.getElementById('product-id');
+    if (!productIdElement) {
+      console.error('Product ID element is missing');
+      return; // Stop the form submission if product-id is missing
+    }
+
+    const rating = document.getElementById('rating').value;
+    const review = document.getElementById('review').value;
+    const productId = productIdElement.value; // Safely retrieve the product-id
+
+    try {
+      const response = await fetch(`/product/${productId}/submit-review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ rating, review })
+      });
+
+      if (response.ok) {
+        alert('Thank you for your review!');
+      } else {
+        alert('Error submitting review');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  });
+}
+//Wishlist
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/wishlist/count')
+        .then(response => response.json())
+        .then(data => {
+            const wishlistCountElement = document.getElementById('wishlist-count');
+            wishlistCountElement.innerText = data.wishlistCount || 0;
+        })
+        .catch(error => console.error('Error fetching wishlist count:', error));
+});
+
+
+function toggleWishlist(button, productId) {
+    const isInWishlist = button.classList.contains('active');
+
+    if (!isInWishlist) {
+        console.log('Adding to wishlist...');
+
+        fetch('/wishlist/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                button.classList.add('active');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Product added to wishlist successfully!',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    // Update the wishlist count using the value returned from the server
+                    const wishlistCountElement = document.getElementById('wishlist-count');
+                    wishlistCountElement.innerText = data.wishlistCount || 0;
+                    console.log('Wishlist count updated:', data.wishlistCount); // Debugging log
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to add product to wishlist',
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Failed to add product to cart',
+                text: 'An unexpected error occurred. Please try again later.',
             });
-        }
-    })
-    .catch(error => console.error('Error:', error));
+        });
+
+    } else {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to remove this product from your wishlist?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log('Removing from wishlist...');
+
+                fetch('/wishlist/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        button.classList.remove('active');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Removed!',
+                            text: 'Product has been removed from your wishlist.',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            // Update the wishlist count using the value returned from the server
+                            const wishlistCountElement = document.getElementById('wishlist-count');
+                            wishlistCountElement.innerText = data.wishlistCount || 0;
+                            console.log('Wishlist count updated:', data.wishlistCount); // Debugging log
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Failed to remove product from wishlist',
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An unexpected error occurred. Please try again later.',
+                    });
+                });
+            }
+        });
+    }
 }
+
+
+//review modal
+// Function to toggle 'More' and 'Less' reviews
+function toggleReviews(showMore) {
+  const allReviews = document.getElementById("all-reviews");
+  const moreLink = document.getElementById("more-link");
+  const lessLink = document.getElementById("less-link");
+
+  if (showMore) {
+    allReviews.style.display = "block";
+    moreLink.style.display = "none";
+    lessLink.style.display = "inline";
+  } else {
+    allReviews.style.display = "none";
+    moreLink.style.display = "inline";
+    lessLink.style.display = "none";
+  }
+}
+
+// Get modal elements
+const modal = document.getElementById("reviewModal");
+const openModalBtn = document.getElementById("openReviewModal");
+const closeModalBtn = document.getElementsByClassName("close")[0];
+
+// Open the modal
+openModalBtn.onclick = function () {
+  modal.style.display = "block";
+}
+
+// Close the modal when clicking the close button
+closeModalBtn.onclick = function () {
+  modal.style.display = "none";
+}
+
+// Close the modal when clicking outside of the modal
+window.onclick = function (event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+
+// Handle review form submission
+document.getElementById("review-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+  alert("Review submitted successfully!");
+  // Perform actual submission (e.g., using fetch or AJAX)
+  modal.style.display = "none"; // Close modal after submission
+});
+
 </script>
 
   </script>

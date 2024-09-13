@@ -1,204 +1,109 @@
-<!-- <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-    <div class="container-fluid">
-      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="offcanvasExample">
-        <span class="navbar-toggler-icon" data-bs-target="#sidebar"></span>
-      </button>
-      <a class="navbar-brand me-auto ms-lg-0 ms-3 text-uppercase fw-bold" href="#">AranoZ</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavBar" aria-controls="topNavBar" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-  </nav>
-  
-  <div class="offcanvas offcanvas-start sidebar-nav bg-light" tabindex="-1" id="sidebar">
-    <div class="offcanvas-body p-0">
-      <nav class="navbar-light">
-        <ul class="navbar-nav">
-          <li>
-            <a href="/admin/dashboard" class="nav-link px-3 active">
-              <span class="me-2"><i class="bi bi-speedometer2"></i></span>
-              <span>Dashboard</span>
-            </a>
-          </li>
-          <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
-          <li>
-            <a href="/admin/category" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
-              <span>Category</span>
-            </a>
-          </li>
-          <li>
-            <a href="/admin/product" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
-              <span>Product</span>
-            </a>
-          </li>
-          <li>
-            <a href="/admin/customers" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
-              <span>Customers</span>
-            </a>
-          </li>
-          <li>
-            <a href="/admin/orders" class="nav-link px-3">
-                <span class="me-2"><i class="bi bi-book-fill"></i></span>
-                <span>Order</span>
-            </a>
-        </li>
-        <li>
-          <a href="/admin/coupon" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
-              <span>Coupon</span>
-          </a>
-      </li>
-      <li>
-        <a href="/admin/offers" class="nav-link px-3">
-            <span class="me-2"><i class="bi bi-book-fill"></i></span>
-            <span>Offers</span>
-        </a>
-    </li>
-    <li>
-      <a href="/admin/sales" class="nav-link px-3">
-          <span class="me-2"><i class="bi bi-book-fill"></i></span>
-          <span>Sales</span>
-      </a>
-  </li>
-          <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
-        </ul>
-      </nav>
-    </div>
-  </div> -->
-<style>
-  /* Navbar Styles */
-/* General body and html settings */
-/* General body and html settings */
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
 
-/* Navbar Styles */
-.navbar {
-    background-color: #ffffff;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 10px 20px;
-    position: fixed;
-    width: calc(100% - 250px); /* Adjust according to sidebar width */
-    top: 0;
-    z-index: 1030; /* Ensure navbar stays above content */
-    left: 250px; /* Matches the sidebar width */
-    transition: all 0.3s ease;
-}
-
-.navbar-toggler {
-    border: none;
-}
-
-.navbar-collapse {
-    justify-content: flex-end;
-}
-
-.navbar-brand {
-    font-weight: bold;
-    font-size: 1.2rem;
-    color: #333;
-}
-
-.navbar-nav .nav-item .nav-link {
-    color: #333;
-    margin: 0 10px;
-    font-size: 1.1rem;
-}
-
-/* Sidebar Styles */
-.sidebar-nav {
-    width: 250px; /* Fixed width */
-    background-color: #2e3b55;
-    color: #ffffff;
-    height: 100vh; /* Full viewport height */
-    padding-top: 20px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    transition: all 0.3s;
-    z-index: 1020; /* Lower than navbar */
-    overflow: hidden; /* Disable scrolling */
-}
-
-.sidebar-nav ul {
-    padding: 0;
-    list-style-type: none;
-}
-
-.sidebar-nav ul li {
-    padding: 15px 20px;
-}
-
-.sidebar-nav ul li a {
-    color: #ffffff;
-    text-decoration: none;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s;
-}
-
-.sidebar-nav ul li a:hover {
-    background-color: #1c2a3a;
-    border-radius: 4px;
-}
-
-.sidebar-nav ul li a.active {
-    background-color: #4c6ef5;
-    border-radius: 4px;
-}
-
-.sidebar-nav ul li a span {
-    margin-left: 10px;
-}
-
-/* Main Content */
-.main-content {
-    margin-left: 250px; /* Match sidebar width */
-    padding: 20px;
-    transition: all 0.3s ease;
-    min-height: 100vh; /* Ensure content always fills the screen */
-}
-
-/* Responsiveness */
-@media (max-width: 992px) {
-    .sidebar-nav {
-        transform: translateX(-100%);
-    }
-
-    .sidebar-nav.show {
-        transform: translateX(0);
-    }
-
+  <style>
+    /* Navbar Styles */
     .navbar {
-        width: 100%;
-        left: 0;
+      background-color: #ffffff;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 10px 20px;
+      position: fixed;
+      width: calc(100% - 250px); /* Adjust according to sidebar width */
+      top: 0;
+      z-index: 1030; /* Ensure navbar stays above content */
+      left: 250px; /* Matches the sidebar width */
+      transition: all 0.3s ease;
     }
 
-    .main-content {
-        margin-left: 0;
+    .navbar-toggler {
+      border: none;
     }
-}
 
-@media (max-width: 768px) {
+    .navbar-collapse {
+      justify-content: flex-end;
+    }
+
     .navbar-brand {
-        font-size: 1rem;
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: #333;
     }
 
     .navbar-nav .nav-item .nav-link {
-        font-size: 1rem;
+      color: #333;
+      margin: 0 10px;
+      font-size: 1.1rem;
     }
-}
 
+    /* Sidebar Styles */
+    .sidebar-nav {
+      width: 250px; /* Fixed width */
+      background-color: #2e3b55;
+      color: #ffffff;
+      height: 100vh; /* Full viewport height */
+      padding-top: 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      transition: all 0.3s;
+      z-index: 1020; /* Lower than navbar */
+      overflow: hidden; /* Disable scrolling */
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); /* Add shadow effect */
+    }
 
+    .sidebar-nav ul {
+      padding: 0;
+      list-style-type: none;
+    }
 
-</style>
+    .sidebar-nav ul li {
+      padding: 10px 20px; /* Reduced padding to minimize spacing between items */
+    }
 
+    .sidebar-nav ul li a {
+      display: flex;
+      align-items: center;
+      color: #1e3a8a !important; /* Dark blue color */
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    /* Adjust the gap between the text and icon */
+    .sidebar-nav ul li a .me-2 {
+      margin-right: 8px; /* Reduced margin between icon and text */
+    }
+
+    /* Hover effect: turn white */
+    .sidebar-nav ul li a:hover {
+      background-color: #1c2a3a !important;
+      border-radius: 4px;
+      color: #ffffff !important;
+    }
+
+    /* Active state for links */
+    .sidebar-nav ul li a.active {
+ 
+      border-radius: 4px;
+      color:#1c2a3a !important;
+    }
+
+    /* Adjust the divider spacing */
+    li.my-1 {
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
+
+    /* Main content positioning */
+    .main-content {
+      margin-left: 250px; /* Match sidebar width */
+      padding: 20px;
+      transition: all 0.3s ease;
+      min-height: 100vh; /* Ensure content always fills the screen */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
     <div class="container-fluid">
       <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="offcanvasExample">
@@ -208,7 +113,7 @@ html, body {
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavBar" aria-controls="topNavBar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <!-- Updated profile picture and navbar content -->
+      <!-- Navbar profile and notification icons -->
       <div class="collapse navbar-collapse" id="topNavBar">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
@@ -233,62 +138,71 @@ html, body {
     </div>
   </nav>
 
+  <!-- Sidebar -->
   <div class="offcanvas offcanvas-start sidebar-nav bg-light" tabindex="-1" id="sidebar">
     <div class="offcanvas-body p-0">
       <nav class="navbar-light">
         <ul class="navbar-nav">
           <li>
             <a href="/admin/dashboard" class="nav-link px-3 active">
-              <span class="me-2"><i class="bi bi-speedometer2"></i></span>
+              <span class="me-2"><i class="bi bi-speedometer2"></i></span> <!-- Dashboard icon -->
               <span>Dashboard</span>
             </a>
           </li>
-          <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
+          <li class="my-1"><hr class="dropdown-divider bg-light" /></li> <!-- Divider -->
+
           <li>
             <a href="/admin/category" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
+              <span class="me-2"><i class="bi bi-folder"></i></span> <!-- Category icon -->
               <span>Category</span>
             </a>
           </li>
-          <!-- Additional Sidebar Links -->
+
           <li>
             <a href="/admin/product" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
+              <span class="me-2"><i class="bi bi-box"></i></span> <!-- Product icon -->
               <span>Product</span>
             </a>
           </li>
+
           <li>
             <a href="/admin/customers" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
+              <span class="me-2"><i class="bi bi-people"></i></span> <!-- Customers icon -->
               <span>Customers</span>
             </a>
           </li>
+
           <li>
             <a href="/admin/orders" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
-              <span>Order</span>
+              <span class="me-2"><i class="bi bi-receipt"></i></span> <!-- Orders icon -->
+              <span>Orders</span>
             </a>
           </li>
+
           <li>
             <a href="/admin/coupon" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
-              <span>Coupon</span>
+              <span class="me-2"><i class="bi bi-tag-fill"></i></span> <!-- Coupon icon -->
+              <span>Coupons</span>
             </a>
           </li>
+
           <li>
             <a href="/admin/offers" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
+              <span class="me-2"><i class="bi bi-gift"></i></span> <!-- Offers icon -->
               <span>Offers</span>
             </a>
           </li>
+
           <li>
             <a href="/admin/sales" class="nav-link px-3">
-              <span class="me-2"><i class="bi bi-book-fill"></i></span>
+              <span class="me-2"><i class="bi bi-bar-chart"></i></span> <!-- Sales icon -->
               <span>Sales</span>
             </a>
           </li>
-          <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
+          <li class="my-1"><hr class="dropdown-divider bg-light" /></li> <!-- Divider -->
         </ul>
       </nav>
     </div>
   </div>
+
+  

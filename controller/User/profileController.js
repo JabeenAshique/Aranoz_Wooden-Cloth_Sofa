@@ -291,7 +291,10 @@ const walletTransactions=async (req, res) => {
       const cartCount = req.session.cartCount || 0;
       const wishlistCount = req.session.wishlistCount || 0;
       const user = await User.findById(req.user._id).populate('walletTransactions').exec();
-      const walletTransactions = user.walletTransactions;
+    
+    //   const walletTransactions = user.walletTransactions;
+      // Sort transactions manually by date in descending order
+      const walletTransactions = user.walletTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
   
       res.render('wallet-history', { walletTransactions,cartCount,wishlistCount });
     } catch (err) {

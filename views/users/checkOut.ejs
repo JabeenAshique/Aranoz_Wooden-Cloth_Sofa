@@ -310,10 +310,17 @@ function handleOrderPlacement() {
 
     const addressId = selectedAddress.value;
     const paymentMethod = selectedPayment.value;
-
+    const cartTotal = parseFloat('<%= cartTotal %>');
     // Disable the proceed button to prevent multiple clicks
     document.querySelector('.btn_3').disabled = true;
-
+    if (paymentMethod === 'COD' && cartTotal > 1000) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Cash on Delivery Not Available',
+            text: 'Cash on Delivery is not allowed for orders above ₹1000. Please choose another payment method.',
+        });
+        return; // Stop further execution if COD is greater than 1000
+    }
 if (paymentMethod === 'Razorpay') {
         // Handle Razorpay payment
         fetch('/order/createRazorpayOrder', {

@@ -2,28 +2,34 @@
 <html lang="zxx">
 
 <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>aranoz</title>
-    <link rel="icon" href="img/favicon.png">
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <!-- animate CSS -->
-    <link rel="stylesheet" href="css/animate.css">
-    <!-- owl carousel CSS -->
-    <link rel="stylesheet" href="css/owl.carousel.min.css">
-    <!-- font awesome CSS -->
-    <link rel="stylesheet" href="css/all.css">
-    <!-- flaticon CSS -->
-    <link rel="stylesheet" href="css/flaticon.css">
-    <link rel="stylesheet" href="css/themify-icons.css">
-    <!-- font awesome CSS -->
-    <link rel="stylesheet" href="css/magnific-popup.css">
-    <!-- swiper CSS -->
-    <link rel="stylesheet" href="css/slick.css">
-    <!-- style CSS -->
-    <link rel="stylesheet" href="css/style.css">
+   <!-- Required meta tags -->
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+   <title>aranoz</title>
+   <link rel="icon" href="img/favicon.png">
+   <!-- Bootstrap CSS -->
+   <link rel="stylesheet" href="css/bootstrap.min.css">
+   <!-- animate CSS -->
+   <link rel="stylesheet" href="css/animate.css">
+   <!-- owl carousel CSS -->
+   <link rel="stylesheet" href="css/owl.carousel.min.css">
+   <!-- nice select CSS -->
+   <link rel="stylesheet" href="css/nice-select.css">
+   <!-- font awesome CSS -->
+   <link rel="stylesheet" href="css/all.css">
+   <!-- flaticon CSS -->
+   <link rel="stylesheet" href="css/flaticon.css">
+   <link rel="stylesheet" href="css/themify-icons.css">
+   <!-- font awesome CSS -->
+   <link rel="stylesheet" href="css/magnific-popup.css">
+   <!-- swiper CSS -->
+   <link rel="stylesheet" href="css/slick.css">
+   <link rel="stylesheet" href="css/price_rangs.css">
+   <!-- style CSS -->
+   <link rel="stylesheet" href="css/style.css">
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<link rel="stylesheet" href="css/home.css">
     <style>
     .feature_part .single_feature_post_text {
     display: flex;
@@ -137,87 +143,163 @@
     <!-- banner part start-->
 
   
-    <section class="feature_part padding_top">
+    
+    
+    <section class="cat_product_area section_padding padding_top">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="section_tittle text-center">
-                        <h2>Featured Categories</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="row align-items-center justify-content-between">
-                <% categoriesWithProducts.forEach((item, index) => { %>
-                    <div class="col-lg-<%= index % 2 === 0 ? '7' : '5' %> col-sm-6">
-                        <div class="single_feature_post_text">
-                            <p>Premium Quality</p>
-                            <% if (item.product) { %>
-                                <h3><%= item.product.productName %></h3>
-                                <a href="/shop?category=<%= item.category._id %>" class="feature_btn">
-                                    EXPLORE NOW <i class="fas fa-play"></i>
-                                </a>
-                                <img src="<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" class="img-fluid feature-img">
-                            <% } else { %>
-                                <h3>No Products Available</h3>
-                            <% } %>
-                        </div>
-                    </div>
-                <% }) %>
-            </div>
-        </div>
-    </section>
-    
-    
-    
-    
-    <!-- upcoming_event part start-->
-
-    <!-- product_list start-->
-    <section class="product_list section_padding">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-12">
-                    <div class="section_tittle text-center">
-                        <h2>awesome <span>shop</span></h2>
-                    </div>
-                </div>
-            </div>
             <div class="row">
-                <div class="col-lg-12">
-                    <div class="product_list_slider owl-carousel">
-                        <% if (products.length === 0) { %>
-                            <p>No products available at the moment.</p>
-                        <% } else { %>
-                            <% for (let i = 0; i < products.length; i += 4) { %>
-                                <div class="single_product_list_slider">
-                                    <div class="row align-items-center justify-content-between">
-                                        <% products.slice(i, i + 4).forEach(product => { %>
-                                            <div class="col-lg-3 col-sm-6">
-                                                <div class="single_product_item">
-                                                    <a href="/product/<%= product._id %>">
-                                                    <img src="<%= product.productImage[0] %>" alt="">
-                                                    <div class="single_product_text">
-                                                        <h4><%= product.productName %></h4>
-                                                        <h3>$<%= product.salePrice %></h3>
-                                                        <a href="#" class="add_cart">+ add to cart<i class="ti-heart"></i></a>
-                                                    </div>
-                                                </a>
-                                                </div>
+                <div class="col-lg-3">
+                    <div class="left_sidebar_area">
+                        <aside class="left_widgets p_filter_widgets">
+                            <div class="l_w_title">
+                                <h3>Product Filter</h3>
+                            </div>
+                            <div class="widgets_inner">
+                                <ul class="list">
+                                    <li>
+                                        <a = href="/shop" class="<%= !categoryFilter ? 'active' : '' %>">
+                                        All Products
+                                        </a>
+                                    </li>
+                                    <% if (categories && categories.length > 0) { %>
+                                        <% categories.forEach(category => { %>
+                                            <li><a  href="/shop?category=<%= category._id %>"><%= category.name %></a></li>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <li>No categories available</li>
+                                    <% } %>
+                                </ul>
+                            </div>
+                        </aside>
+
+                       
+                       
+
+                        <aside class="left_widgets p_filter_widgets price_rangs_aside">
+                            <div class="l_w_title">
+                                <h3>Price Filter</h3>
+                            </div>
+                            <div class="widgets_inner">
+                                <div class="range_item">
+                                    <form id="price-filter-form" method="GET" action="/shop">
+                                        <div class="d-flex">
+                                            <div class="price_text">
+                                                <p>Price :</p>
                                             </div>
-                                        <% }); %>
-                                    </div>
+                                            <div class="price_value d-flex justify-content-center">
+                                                <input type="text" name="minPrice" class="js-input-from" id="minPrice" placeholder="Min"  />
+                                                <span>to</span>
+                                                <input type="text" name="maxPrice" class="js-input-to" id="maxPrice" placeholder="Max"  />
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="apply-filter-btn">Apply Price Filter</button>
+                                    </form>
                                 </div>
-                            <% } %>
-                        <% } %>
+                            </div>
+                        </aside>
+                        
+                                                
+                        
                         
                     </div>
                 </div>
+                <div class="col-lg-9">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="product_top_bar d-flex justify-content-between align-items-center">
+                                <div class="single_product_menu">
+                                   
+                                </div>
+                              
+                                <div class="single_product_menu d-flex">
+                                    <h5>sort by : </h5>
+                                    <select id="sortOptions" onchange="applySort()">
+                                        <option value="default" data-display="Select">Select</option>
+                                        <option value="popularity">Popularity</option>
+                                        <option value="priceAsc">Price: low to high</option>
+                                        <option value="priceDesc">Price: high to low</option>
+                                        <option value="averageRatings">Average ratings</option>
+                                        <option value="featured">Featured</option>
+                                        <option value="newArrivals">New arrivals</option>
+                                        <option value="az">A - Z</option>
+                                        <option value="za">Z - A</option>
+                                    </select>
+                                </div>
+                                <div class="single_product_menu d-flex">
+                                    <div class="input-group">
+                                        <form action="/shop" method="GET" class="input-group">
+                                            <input type="text" class="form-control" name="search" placeholder="Search" aria-describedby="inputGroupPrepend" value="<%= searchQuery %>">
+                                            <div class="input-group-prepend">
+                                                <button type="submit" class="input-group-text" id="inputGroupPrepend">
+                                                    <i class="ti-search"></i>
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="single_product_menu d-flex">
+                                    
+                                    <div class="top_pageniation">
+                                        <ul class="pagination justify-content-center" style="list-style: none; padding: 0;">
+                                            <% for(let i = 1; i <= totalPages; i++) { %>
+                                                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                                    <a class="page-link" href="?page=<%= i %>&search=<%= searchQuery %>&sort=<%= sortOption %>"><%= i %></a>
+                                                </li>
+                                            <% } %>
+                                        </ul>
+                                    </div>
+                                </div>
+                               
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row align-items-center latest_product_inner">
+                        
+                        <% if (products && products.length > 0) { %>
+                            <% products.forEach(product => { %>
+                                <div class="col-lg-4 col-sm-6">
+                                    <div class="single_product_item">
+                                        <a href="/product/<%= product._id %>">
+                                            <img src="<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                                        </a>
+                                        <div class="single_product_text">
+                                            <h4><%= product.productName %></h4>
+                                            <h3>₹<%= product.salePrice %></h3>
+                                            <button class="add-to-cart-btn" data-product-id="<%= product._id %>" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
+                                            <button 
+                                            class="add-to-wishlist-btn <%= wishlistItems.includes(product._id.toString()) ? 'active' : '' %>" 
+                                            data-product-id="<%= product._id %>" 
+                                            onclick="toggleWishlist(this, '<%= product._id %>')">
+                                            <i class="ti-heart"></i>
+                                        </button>                                          
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="col-12">
+                                <p>No products available in this category</p>
+                            </div>
+                        <% } %>
+                    </div>
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <% for(let i = 1; i <= totalPages; i++) { %>
+                                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                </li>
+                            <% } %>
+                        </ul>
+                    </nav>
+                     
+                </div>
             </div>
         </div>
     </section>
-    
-    <!-- product_list part start-->
-
+   
+   
 
   
 
@@ -385,6 +467,165 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
     <script src="js/mail-script.js"></script>
     <!-- custom js -->
     <script src="js/custom.js"></script>
+    <script>
+            function applySort() {
+    const sortValue = document.getElementById('sortOptions').value;
+    window.location.href = `/shop?sort=${sortValue}`;
+  }
+
+  function addToCart(productId) {
+    console.log('addToCart function called'); // Debug log
+    console.log('Product ID:', productId); // Debug log
+   
+    fetch('/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId })
+    })
+    .then(response => {
+        console.log('Response received:', response); // Debug log
+        return response.json();
+    })
+    .then(data => {
+        console.log('Data received:', data); // Debug log
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Product added to cart successfully!',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                window.location.href = '/cart'; // Redirect to cart page
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to add product to cart',
+            });
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/wishlist/count')
+        .then(response => response.json())
+        .then(data => {
+            const wishlistCountElement = document.getElementById('wishlist-count');
+            wishlistCountElement.innerText = data.wishlistCount || 0;
+        })
+        .catch(error => console.error('Error fetching wishlist count:', error));
+});
+
+
+function toggleWishlist(button, productId) {
+    const isInWishlist = button.classList.contains('active');
+
+    if (!isInWishlist) {
+        console.log('Adding to wishlist...');
+
+        fetch('/wishlist/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                button.classList.add('active');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Product added to wishlist successfully!',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    // Update the wishlist count using the value returned from the server
+                    const wishlistCountElement = document.getElementById('wishlist-count');
+                    wishlistCountElement.innerText = data.wishlistCount || 0;
+                    console.log('Wishlist count updated:', data.wishlistCount); // Debugging log
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to add product to wishlist',
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An unexpected error occurred. Please try again later.',
+            });
+        });
+
+    } else {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to remove this product from your wishlist?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log('Removing from wishlist...');
+
+                fetch('/wishlist/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        button.classList.remove('active');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Removed!',
+                            text: 'Product has been removed from your wishlist.',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            // Update the wishlist count using the value returned from the server
+                            const wishlistCountElement = document.getElementById('wishlist-count');
+                            wishlistCountElement.innerText = data.wishlistCount || 0;
+                            console.log('Wishlist count updated:', data.wishlistCount); // Debugging log
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Failed to remove product from wishlist',
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An unexpected error occurred. Please try again later.',
+                    });
+                });
+            }
+        });
+    }
+}
+
+    </script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

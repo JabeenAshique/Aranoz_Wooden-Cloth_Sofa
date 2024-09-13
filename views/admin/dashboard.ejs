@@ -10,41 +10,7 @@
   <link rel="stylesheet" href="/css/dashboard.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Updated Chart.js CDN -->
   <style>
-    .navbar.bg-light {
-      background-color: #569c79 !important;
-    }
-    .offcanvas.bg-light {
-      background-color: #569c79 !important;
-    }
-    .navbar-light .navbar-nav .nav-link {
-      color: #ffffff !important;
-    }
-    .offcanvas .navbar-nav .nav-link {
-      color: #ffffff !important;
-    }
-    main {
-      margin-top: 56px; /* Adjust this based on your navbar height */
-      height: calc(100vh - 56px); /* Full height minus navbar */
-      overflow: auto;
-      margin-left: 270px; /* Adjust this based on your sidebar width */
-    }
-    .sidebar-nav {
-      width: 270px; /* Adjust this based on your sidebar width */
-      height: calc(100vh - 56px);
-      top: 56px;
-      overflow-y: auto;
-      position: fixed;
-      left: 0;
-    }
-    .navbar-brand {
-      color: white !important;
-    }
-    .content {
-      padding: 20px; /* Add some padding for better spacing */
-    }
-    .container-fluid {
-      padding: 0 20px; /* Adjust padding to reduce space */
-    }
+  
     body {
       font-family: Arial, sans-serif;
     }
@@ -324,7 +290,7 @@ tbody tr:hover {
             </div>
 
             <div class="revenue-category">
-              <h5>Products Sold Based on Time Period</h5>
+              <h5>Products Based on Time Period</h5>
               <select id="timePeriod" class="form-control" onchange="fetchProductsSoldData()">
                 <option value="yearly" <%= timePeriod === 'yearly' ? 'selected' : '' %>>Yearly</option>
                 <option value="monthly" <%= timePeriod === 'monthly' ? 'selected' : '' %>>Monthly</option>
@@ -338,7 +304,7 @@ tbody tr:hover {
           <div class="best-selling">
          
             <div class="products-container">
-              <h5>Top 10 Best Selling Products</h5>
+              <h5>Top Best Selling Products</h5>
                 <div class="products-list">
                     <% products.forEach(product => { %>
                         <div class="product-item">
@@ -357,7 +323,7 @@ tbody tr:hover {
           <div class="best-categories">
           
             <div class="categories-container">
-              <h5>Top 10 Best Selling Categories</h5>
+              <h5>Top Best Selling Categories</h5>
                 <table>
                     <thead>
                         <tr>
@@ -388,98 +354,129 @@ tbody tr:hover {
   <script>
       console.log("JavaScript file loaded successfully.");
    
-      function fetchSalesStatistics() {
-        console.log("fetchSalesStatistics function is triggered");
-        const salesTimePeriod = document.getElementById('salesTimePeriod').value;
-        window.location.href = `/admin/dashboard?salesTimePeriod=${salesTimePeriod}`;
-      }
 
-    // Generate labels for the chart based on the selected time period
-   
 
-    // Sale Statistics Data for Line Chart
-    const salesTimePeriod = "<%= salesTimePeriod %>";  // Get the selected time period from the backend
-    const salesData = JSON.parse('<%- salesData %>');  // Parse sales data from JSON string
-    const usersData = JSON.parse('<%- usersData %>');  // Parse users data from JSON string
-    const productsData = JSON.parse('<%- productsData %>');  // Parse products data from JSON string
-    const ordersData = JSON.parse('<%- ordersData %>');  // Parse orders data from JSON string
-    console.log('Sales Data:', salesData);
-    console.log('Users Data:', usersData);
-    console.log('Products Data:', productsData);
-    console.log('Orders Data:', ordersData);
+function getLabelsForTimePeriod(salesTimePeriod) {
+    let labels = [];
 
- // For Orders
- 
-    // Define the labels based on the time period (e.g., Weeks or Months)
-    const labels = getLabelsForTimePeriod(salesTimePeriod, salesData);
+    if (salesTimePeriod === "weekly") {
+        // Generate labels for 52 weeks
+        for (let i = 1; i <= 52; i++) {
+            labels.push(`Week ${i}`);
+        }
+    } else if (salesTimePeriod === "monthly") {
+        // Generate labels for 12 months
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        labels = monthNames;
+    } else if (salesTimePeriod === "yearly") {
+        // Generate labels for 10 years (you can adjust this)
+        const currentYear = new Date().getFullYear();
+        for (let i = currentYear - 9; i <= currentYear; i++) {
+            labels.push(`Year ${i}`);
+        }
+    }
 
-    // Update the chart datasets with fetched data
-    const saleStatisticsData = {
-        labels: labels,  // Use dynamically generated labels (e.g., Week 1, Week 2, etc.)
-        datasets: [
-            {
-                label: 'Users',
-                data: usersData,  // Pass the users data fetched from the server
-                borderColor: 'blue',
-                fill: false,
-                tension: 0.1
-            },
-            {
-                label: 'Products',
-                data: productsData,  // Pass the products data fetched from the server
-                borderColor: 'green',
-                fill: false,
-                tension: 0.1
-            },
-            {
-                label: 'Orders',
-                data: ordersData,  // Pass the orders data fetched from the server
-                borderColor: 'pink',
-                fill: false,
-                tension: 0.1
-            }
-        ]
-    };
+    return labels;
+}
 
-    // Create a new Chart.js instance or update the existing chart
-    const saleStatisticsChart = new Chart(
-        document.getElementById('saleStatisticsChart'),  // Ensure the canvas element exists in your HTML
+// Fetch sales statistics and update chart
+function fetchSalesStatistics() {
+    console.log("fetchSalesStatistics function is triggered");
+    const salesTimePeriod = document.getElementById('salesTimePeriod').value;
+    window.location.href = `/admin/dashboard?salesTimePeriod=${salesTimePeriod}`;
+}
+
+// Fetch the sales data
+const salesTimePeriod = "<%= salesTimePeriod %>";  // Get the selected time period from the backend
+const salesData = JSON.parse('<%- salesData %>');  // Parse sales data from JSON string
+const usersData = JSON.parse('<%- usersData %>');  // Parse users data from JSON string
+const productsData = JSON.parse('<%- productsData %>');  // Parse products data from JSON string
+const ordersData = JSON.parse('<%- ordersData %>');  // Parse orders data from JSON string
+
+// Generate labels based on the selected time period
+const labels = getLabelsForTimePeriod(salesTimePeriod);
+
+// Prepare the dataset for Chart.js
+const saleStatisticsData = {
+    labels: labels,
+    datasets: [
         {
-            type: 'line',
-            data: saleStatisticsData,
-            options: {
-                responsive: true,  // Make the chart responsive
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Time Period',  // Label for X-axis
-                        }
+            label: 'Users',
+            data: usersData,
+            borderColor: 'blue',
+            fill: false,
+            tension: 0.1,
+            yAxisID: 'y-axis-1'
+        },
+        {
+            label: 'Products',
+            data: productsData,
+            borderColor: 'green',
+            fill: false,
+            tension: 0.1,
+            yAxisID: 'y-axis-1'
+        },
+        {
+            label: 'Orders',
+            data: ordersData,
+            borderColor: 'pink',
+            fill: false,
+            tension: 0.1,
+            yAxisID: 'y-axis-1'
+        },
+        {
+            label: 'Sales',
+            data: salesData,
+            borderColor: 'red',
+            fill: false,
+            tension: 0.1,
+            yAxisID: 'y-axis-2'
+        }
+    ]
+};
+
+// Define the chart options, including multiple Y-axes
+const saleStatisticsChart = new Chart(
+    document.getElementById('saleStatisticsChart').getContext('2d'),
+    {
+        type: 'line',
+        data: saleStatisticsData,
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time Period'
+                    }
+                },
+                'y-axis-1': {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Count (Users/Products/Orders)'
+                    }
+                },
+                'y-axis-2': {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Sales'
                     },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Count'  // Label for Y-axis
-                        },
-                        beginAtZero: true  // Start Y-axis at 0
+                    grid: {
+                        drawOnChartArea: false // Keep the sales grid separate from the other datasets
                     }
                 }
             }
         }
-    );
-
-
-// Function to fetch labels based on selected time period
-function getLabelsForTimePeriod(SalestimePeriod, data) {
-    if (SalestimePeriod === 'yearly') {
-        return data.map(item => `${item._id}`);  // Years (e.g., 2020, 2021)
-    } else if (SalestimePeriod === 'monthly') {
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        return monthNames;  // Use fixed month names
-    } else if (SalestimePeriod === 'weekly') {
-        return data.map(item => `Week ${item._id}`);  // Grouping by week (e.g., Week 1, Week 2)
     }
-}
+);
 
 
   // Function to fetch products sold data based on the selected time period
@@ -513,8 +510,13 @@ function getLabelsForTimePeriod(SalestimePeriod, data) {
     }
 
     // Products Sold Pie Chart Setup
-    const productsSoldData = JSON.parse('<%- productsSoldByPeriod %>');  // The products data from backend
-    const timePeriod = "<%= timePeriod %>";  // The selected time period passed from the backend
+    
+        const productsSoldData = JSON.parse('<%- productsSoldByPeriod %>');  
+        const timePeriod = "<%= timePeriod %>";  
+
+        
+        console.log('Products Sold Data:', productsSoldData);
+        console.log('Time Period:', timePeriod);
 
     const labels1 = getLabelsForTimePeriod1(timePeriod, productsSoldData);  // Generate labels based on the time period
 

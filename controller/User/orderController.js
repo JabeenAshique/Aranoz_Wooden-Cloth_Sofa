@@ -296,6 +296,10 @@ const loadOrderPage = async (req, res) => {
     res.status(500).send(error.message);
   }
 }
+
+
+
+
 const loadOrder_detailsPage = async (req, res) => {
   try {
     const wishlistCount = req.session.wishlistCount || 0;

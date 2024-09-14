@@ -116,11 +116,14 @@
         console.log("Order ID:", orderId);  // For debugging
         console.log("Payment Status:", paymentStatus);  // For debugging
 
-        if (paymentStatus === 'Success') {
-            document.getElementById('orderStatus').innerText = 'Your order has been placed successfully!';
-        } else {
-            document.getElementById('orderStatus').innerText = 'Your payment failed, but your order is pending. Please complete the payment to confirm.';
-        }
+            if (paymentStatus === 'Pending' && paymentMethod === 'COD') { 
+            <p>Your order has been placed successfully. Payment will be collected upon delivery.</p>
+            } else if (paymentStatus === 'Failed') { 
+            <p>Your payment failed, but your order is pending. Please complete the payment to confirm.</p>
+            } else {
+            <p>Thank you for your payment! Your order has been placed successfully.</p>
+            } 
+
     </script>
 </body>
 </html>

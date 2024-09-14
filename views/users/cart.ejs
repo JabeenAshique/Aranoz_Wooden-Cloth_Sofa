@@ -59,6 +59,33 @@
   border-bottom-right-radius: 0.25rem;
   }
 
+/* Ensure the remove button is always visible in responsive views */
+@media (max-width: 768px) {
+    .cart_inner table td button.btn_1 {
+        display: block;
+        margin-top: 10px;
+        width: 100%; /* Make the remove button take up the full width on small screens */
+    }
+
+    .cart_inner .media {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .cart_inner .media img {
+        margin-bottom: 10px; /* Add space between the image and product details */
+    }
+
+    .cart_inner table td h5 {
+        text-align: center;
+    }
+
+    .checkout_btn_inner {
+        text-align: center;
+    }
+}
 
 
   </style>
@@ -88,13 +115,14 @@
                   <td>
                     <div class="media">
                       <div class="d-flex">
-                        <img src="<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" style="height: 250px; width: 250px;" />         </div>
+                        <!-- Adjust the height and width for the image -->
+                        <img src="<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" style="height: 100px; width: 100px;" />
+                      </div>
                       <div class="media-body">
                         <p><%= item.product.productName %></p>
                         <% if (item.product.quantity === 0) { %>
                           <p style="color: red;">Out of stock</p>
                         <% } %>
-                        
                       </div>
                     </div>
                   </td>
@@ -105,10 +133,8 @@
                     <div class="product_count">
                       <div class="input-group-prepend">
                         <button class="btn btn-outline-black decrease" type="button" title="Decrease quantity" onclick="updateQuantity('<%= item.product._id %>', 'decrement')">&minus;</button>
-                        <input type="number" class="form-control text-center quantity-amount" name="quantity" size="5" id="quantity-<%= item.product._id %>" value="1" min="1" max="<%= item.product.quantity %>"aria-label="Quantity" readonly>
+                        <input type="number" class="form-control text-center quantity-amount" name="quantity" size="5" id="quantity-<%= item.product._id %>" value="1" min="1" max="<%= item.product.quantity %>" aria-label="Quantity" readonly>
                         <button class="btn btn-outline-black increase" type="button" title="Increase quantity" onclick="updateQuantity('<%= item.product._id %>', 'increment')">&plus;</button>
-                      </div>
-                      <div class="input-group-append">
                       </div>
                     </div>
                   </td>
@@ -116,8 +142,9 @@
                     <h5><span id="total-<%= item.product._id %>"><%= item.product.salePrice * item.quantity %></span></h5>
                   </td>
                   <td>
-                    <button class="btn_1" onclick="removeFromCart('<%= item.product._id %>')">Remove</button>
+                    <button class="btn_1" onclick="removeFromCart('<%= item.product._id %>')"> <i class="fas fa-trash-alt remove-btn"></i></button>
                   </td>
+                  
                 </tr>
                 <% }) %>
              </tbody>

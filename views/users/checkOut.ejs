@@ -211,7 +211,7 @@
               <div class="payment_item">
                 <div class="radion_btn">
                   <input type="radio" id="wallet" name="paymentMethod" value="Wallet" />
-                  <label for="wallet">Use Wallet Balance (₹<%= user.walletBalance %>)</label>
+                  <label for="wallet">Use Wallet Balance (₹<%= walletBalance %>)</label>
                   <div class="check"></div>
                 </div>
                 <p>
@@ -286,7 +286,8 @@
   </div>
 <!-- end edit_modal -->
 <%- include('footer') %>
-  <!-- jquery plugins here-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
   <script>
 function handleOrderPlacement() {
     const selectedAddress = document.querySelector('input[name="address"]:checked');
@@ -389,10 +390,11 @@ if (paymentMethod === 'Razorpay') {
         });
     } else {
         // Handle COD and Wallet directly
-        finalizeOrderPlacement(addressId, paymentMethod);
+        let paymentStatus = paymentMethod === 'COD' ? 'Pending' : 'Success'; 
+        finalizeOrderPlacement(addressId, paymentMethod,paymentStatus);
     }
 }
-function finalizeOrderPlacement(addressId, paymentMethod, paymentStatus, razorpayOrderId, razorpayPaymentId = null)  {
+function finalizeOrderPlacement(addressId, paymentMethod, paymentStatus, razorpayOrderId=null, razorpayPaymentId = null)  {
         const orderData = {
             addressId: addressId,
             payment: paymentMethod,
@@ -531,6 +533,7 @@ $('#editAddressForm').submit(function(event) {
   });
 });
   </script>
+
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- jquery -->
     <script src="js/jquery-1.12.1.min.js"></script>

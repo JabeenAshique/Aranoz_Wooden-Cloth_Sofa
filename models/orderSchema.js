@@ -26,6 +26,11 @@ const orderSchema = new Schema({
         appliedOffer: { 
             type: Number, 
             default: 0 
+        },
+        status: {
+            type: String,
+            enum: ['Ordered', 'Canceled', 'Delivered', 'Returned','Cancelled'], // Individual item status
+            default: 'Ordered'
         }
     }],
     couponCode: {

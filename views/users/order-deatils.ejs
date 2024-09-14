@@ -65,6 +65,14 @@
                         <div class="media-body">
                           <h5 class="mt-0 mb-1"><%= item.product.productName %></h5>
                           Quantity: <%= item.quantity %> | Price: $<%= item.price %>
+                          <!-- Show Return/Cancel Status Below Product -->
+                          <% if (item.status === 'Returned') { %>
+                            <p class="text-danger">Returned</p>
+                          <% } else if (item.status === 'Cancelled') { %>
+                            <p class="text-warning">Cancelled</p>
+                          <% } else { %>
+                            <p class="text-success">Ordered</p>
+                          <% } %>
                         </div>
                       </li>
                     <% }) %>
@@ -94,105 +102,226 @@
               </div>
               <div class="order-actions">
                 <% if (order.status === 'Pending') { %>
-                    <button class="btn cancel-button" onclick="confirmCancel('<%= order.orderId %>')">Cancel Order</button>
+                  <button class="btn cancel-button" onclick="showCancelModal('<%= order.orderId %>', <%= JSON.stringify(order.orderedItems) %>)">Cancel Order</button>
+
                 <% } else if (order.status === 'Delivered') { %>
-                    
-                        <button class="btn return-button" onclick="confirmReturn('<%= order.orderId %>')">Return Order</button>
+                  <button class="btn cancel-button" onclick="showReturnModal('<%= order.orderId %>', <%= JSON.stringify(order.orderedItems) %>)">Return Order</button>
+
+                       <!-- // <button class="btn return-button" onclick="confirmReturn('<%= order.orderId %>')">Return Order</button> -->
                     
                 <% } %>
             </div>
             
             </div>
           </div>
-       
+          <!-- Cancel Modal -->
+          <div id="cancelOrderModal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Select Items to Cancel</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span>&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <form id="cancelOrderForm">
+                    <% order.orderedItems.forEach(item => { %>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="<%= item.product._id %>" id="product_<%= item.product._id %>" name="products">
+                        <label class="form-check-label" for="product-<%= item.product._id %>">
+                          <%= item.product.productName %> (Quantity: <%= item.quantity %>)
+                        </label>
+                      </div>
+                    <% }) %>
+                    
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-danger" onclick="confirmCancel('<%= order._id %>')">Cancel Selected Items</button>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        <!-- Return Modal -->
+        <div id="returnOrderModal" class="modal fade" tabindex="-1" role="dialog">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Select Items to Return</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span>&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <form id="returnOrderForm">
+                  <!-- Dynamic content will be injected here -->
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="confirmReturn('<%= order._id %>')">Return Selected Items</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+          </div>
+          
       </div>
     </div>
   </div>
 </section>
 
 <%- include('footer') %>
-
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="/js/jquery-3.5.1.min.js"></script>
 <script src="/js/bootstrap.bundle.min.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
-  function confirmCancel(orderId) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "Do you really want to cancel this order?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, cancel it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Make a POST request to cancel the order
-            fetch(`/cancel/${orderId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success');
-                    // Redirect or refresh the page
-                    location.reload();
-                } else {
-                    Swal.fire('Error!', 'Failed to cancel the order.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Error!', 'An error occurred. Please try again.', 'error');
-            });
+  // cancel modal function
+  function showCancelModal(orderId, orderedItems) {
+  if (!Array.isArray(orderedItems)) {
+    console.error('orderedItems is not an array:', orderedItems);
+    return;
+  }
+
+  const modalBody = document.querySelector('#cancelOrderForm');
+  modalBody.innerHTML = ''; // Clear the existing content
+
+  // Populate the form with checkboxes for each item
+  orderedItems.forEach(item => {
+    const checkbox = `
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="${item.product._id}" id="product_${item.product._id}" name="products">
+        <label class="form-check-label" for="product_${item.product._id}">
+          ${item.product.productName} (Quantity: ${item.quantity})
+        </label>
+      </div>`;
+    modalBody.insertAdjacentHTML('beforeend', checkbox);
+  });
+
+  // Show the modal
+  $('#cancelOrderModal').modal('show');
+}
+// Return modal function
+function showReturnModal(orderId, orderedItems) {
+  if (!Array.isArray(orderedItems)) {
+    console.error('orderedItems is not an array:', orderedItems);
+    return;
+  }
+
+  const modalBody = document.querySelector('#returnOrderForm');
+  modalBody.innerHTML = ''; // Clear the existing content
+
+  // Populate the form with checkboxes for each item
+  orderedItems.forEach(item => {
+    const checkbox = `
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="${item.product._id}" id="product_${item.product._id}" name="products">
+        <label class="form-check-label" for="product_${item.product._id}">
+          ${item.product.productName} (Quantity: ${item.quantity})
+        </label>
+      </div>`;
+    modalBody.insertAdjacentHTML('beforeend', checkbox);
+  });
+
+  // Show the modal
+  $('#returnOrderModal').modal('show');
+}
+function confirmReturn(orderId) {
+  // Get all selected checkboxes (products to return)
+  const selectedProductIds = Array.from(document.querySelectorAll('#returnOrderForm .form-check-input:checked'))
+    .map(checkbox => checkbox.value);
+
+  if (selectedProductIds.length === 0) {
+    alert('Please select at least one product to return.');
+    return;
+  }
+
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "Do you really want to return these products?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, return it!'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Make a POST request to return the selected items
+      fetch(`/return/${orderId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productIds: selectedProductIds })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire('Returned!', 'Your products have been returned.', 'success');
+          location.reload();
+        } else {
+          Swal.fire('Error!', 'Failed to return the products.', 'error');
         }
-    });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error!', 'An error occurred. Please try again.', 'error');
+      });
+    }
+  });
 }
 
-function confirmReturn(orderId) {
-   
+function confirmCancel(orderId) {
+  // Get all selected checkboxes (products to cancel)
+  const selectedProductIds = Array.from(document.querySelectorAll('.form-check-input:checked'))
+  .map(checkbox => checkbox.value);
+
+
+  console.log('Selected Product IDs:', selectedProductIds); // Debugging output
 
   
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "Do you really want to return this order?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, return it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Make a POST request to return the order
-            fetch(`/return/${orderId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Returned!', 'Your order has been returned.', 'success');
-                    // Redirect or refresh the page
-                    location.reload();
-                } else {
-                    Swal.fire('Error!', 'Failed to return the order.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Error!', 'An error occurred. Please try again.', 'error');
-            });
-        }
-    });
-}
 
+  Swal.fire({
+      title: 'Are you sure?',
+      text: "Do you really want to cancel this order?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, cancel it!'
+  }).then((result) => {
+      if (result.isConfirmed) {
+          // Make a POST request to cancel the order
+          fetch(`/cancel/${orderId}`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ productIds: selectedProductIds }) 
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success');
+                  // Redirect or refresh the page
+                  location.reload();
+              } else {
+                  Swal.fire('Error!', 'Failed to cancel the order.', 'error');
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              Swal.fire('Error!', 'An error occurred. Please try again.', 'error');
+          });
+      }
+  });
+}
   function retryPayment(orderId,razorpayOrderId) {
     fetch(`/order/${orderId}/retryPayment`, {
       method: 'POST',
@@ -266,9 +395,6 @@ function confirmReturn(orderId) {
 
 
 </script>
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </body>
 </html>

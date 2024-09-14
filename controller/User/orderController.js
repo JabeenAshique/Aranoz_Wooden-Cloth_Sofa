@@ -114,63 +114,88 @@ const createOrder = async ({ orderedItems, totalPrice, discount, finalAmount, ad
     return newOrder;
 };
 
+
 const orderPlaced = async (req, res) => {
-    try {
-        const {  addressId, payment, couponCode, paymentStatus, razorpayOrderId, razorpayPaymentId  } = req.body;
-        const userId = req.user._id;
+  try {
+      const { addressId, payment, couponCode, paymentStatus, razorpayOrderId, razorpayPaymentId } = req.body;
+      const userId = req.user._id;
 
-        if (!addressId || !payment) {
-            return res.status(400).json({ success: false, message: 'Address and payment method are required.' });
-        }
-        const { user, address } = await findUserAndAddress(userId, addressId);
-        const { productDiscount, couponDiscount, couponApplied, appliedCouponCode } = await calculateDiscounts(user, couponCode, req);
+      if (!addressId || !payment) {
+          return res.status(400).json({ success: false, message: 'Address and payment method are required.' });
+      }
 
-        const totalPrice = user.cart.reduce((acc, item) => acc + (item.quantity * item.productId.salePrice), 0);
-        const discount = productDiscount + couponDiscount;
-        const finalAmount = totalPrice - discount;
+      const { user, address } = await findUserAndAddress(userId, addressId);
+      const { productDiscount, couponDiscount, couponApplied, appliedCouponCode } = await calculateDiscounts(user, couponCode, req);
 
-        const orderedItems = user.cart.map(item => ({
-            product: item.productId._id,
-            quantity: item.quantity,
-            price: item.productId.salePrice
-        }));
+      const totalPrice = user.cart.reduce((acc, item) => acc + (item.quantity * item.productId.salePrice), 0);
+      const discount = productDiscount + couponDiscount;
+      const finalAmount = totalPrice - discount;
 
-       
-        const newOrder = await createOrder({
-            orderedItems,
-            totalPrice,
-            discount,
-            finalAmount,
-            address,
-            payment,
-            userId,
-            appliedCouponCode,
-            couponDiscount,
-            couponApplied,
-            paymentStatus: paymentStatus, 
-            razorpayOrderId,
-            razorpayPaymentId
-        });
+      const orderedItems = user.cart.map(item => ({
+          product: item.productId._id,
+          quantity: item.quantity,
+          price: item.productId.salePrice
+      }));
 
-        if (payment === 'Wallet') {
-            if (user.walletBalance < newOrder.finalAmount) {
-                return res.status(400).json({ success: false, message: 'Insufficient wallet balance.' });
-            }
-            user.walletBalance -= finalAmount;
-            await user.save();
-            
-        }
+      const newOrder = await createOrder({
+          orderedItems,
+          totalPrice,
+          discount,
+          finalAmount,
+          address,
+          payment, // COD or Wallet
+          userId,
+          appliedCouponCode,
+          couponDiscount,
+          couponApplied,
+          paymentStatus: payment === 'COD' ? 'Pending' : paymentStatus,  // COD is always pending, Wallet is successful
+          razorpayOrderId: payment === 'Wallet' ? null : razorpayOrderId, // Only for Razorpay
+          razorpayPaymentId: payment === 'Wallet' ? null : razorpayPaymentId // Only for Razorpay
+      });
 
-        user.cart = [];
-        req.session.cartCount = 0;  // Reset cart count in the session
-        cartCount = 0;  // Update the local variable to return in the response
-        await user.save();
+      // Handle Wallet Payment
+      if (payment === 'Wallet') {
+          const latestTransaction = user.walletTransactions.length > 0
+              ? user.walletTransactions[user.walletTransactions.length - 1].walletBalance
+              : 0;
 
-        res.json({ success: true, message: 'Order placed successfully.',cartCount });
-    } catch (error) {
-        console.error('Error placing order:', error);
-        res.status(500).json({ success: false, message: 'An error occurred. Please try again.' });
-    }
+          // Check if the wallet balance is sufficient
+          if (latestTransaction < newOrder.finalAmount) {
+              return res.status(400).json({ success: false, message: 'Insufficient wallet balance.' });
+          }
+
+          const newWalletBalance = latestTransaction - newOrder.finalAmount;
+
+          // Add the wallet debit transaction
+          user.walletTransactions.push({
+              type: 'debit',
+              amount: newOrder.finalAmount,
+              walletBalance: newWalletBalance,
+              description: `Payment for order #${newOrder._id}`  // Use newOrder._id here
+          });
+
+          await user.save(); // Save the user with updated wallet balance
+      }
+
+      // Clear the user's cart after successful order placement
+      user.cart = [];
+      req.session.cartCount = 0; // Reset cart count in the session
+      await user.save();
+
+      // Return the orderId to the frontend
+      // res.json({ success: true, message: 'Order placed successfully.', orderId: newOrder._id, cartCount: 0 });
+      res.json({
+        success: true,
+        message: 'Order placed successfully.',
+        orderId: newOrder._id,
+        paymentStatus: payment === 'COD' ? 'Pending' : paymentStatus,
+        cartCount: 0
+    });
+    
+  } catch (error) {
+      console.error('Error placing order:', error);
+      res.status(500).json({ success: false, message: 'An error occurred. Please try again.' });
+  }
 };
 
 const createRazorpayOrder = async (req, res) => {
@@ -312,101 +337,241 @@ const loadOrder_detailsPage = async (req, res) => {
   }
 }
 
+// const OrderCancel = async (req, res) => {
+//   try {
+//     const { orderId } = req.params;
+//     const { productIds } = req.body; // Array of product IDs to cancel
+
+//     if (!productIds || productIds.length === 0) {
+//       return res.status(400).json({ success: false, message: 'No products selected for cancellation.' });
+//     }
+
+//     // Find the order by ID
+//     const order = await Order.findOne({ _id: orderId, userId: req.user._id });
+//     if (!order) {
+//       return res.status(404).json({ success: false, message: 'Order not found' });
+//     }
+
+//     // Filter out the products that are being canceled from the orderedItems
+//     const canceledItems = order.orderedItems.filter(item => productIds.includes(item.product._id.toString()));
+
+//     if (canceledItems.length === 0) {
+//       return res.status(400).json({ success: false, message: 'No matching products found in order' });
+//     }
+
+//     let totalRefundAmount = 0;
+//     const updatedOrderedItems = [];
+
+//     // Loop through each ordered item and check if it's in the cancellation request
+//     for (const item of order.orderedItems) {
+//       if (productIds.includes(item.product.toString())) { // If product is selected for cancellation
+//         console.log(`Cancelling product ${item.product} with quantity ${item.quantity}`);
+        
+//         // Refund the item price * quantity
+//         const refundAmount = item.price * item.quantity;
+//         totalRefundAmount += refundAmount;
+
+//         // Restore product quantity back to inventory
+//         await Product.findByIdAndUpdate(item.product, { $inc: { quantity: item.quantity } });
+
+//       } else {
+//         // Keep the non-cancelled items in the updatedOrderedItems array
+//         updatedOrderedItems.push(item);
+//       }
+//     }
+
+//     // Update the order with remaining products, if any
+//     order.orderedItems = updatedOrderedItems;
+
+//     // If all items are cancelled, mark order status as "Cancelled"
+//     if (updatedOrderedItems.length === 0) {
+//       order.status = 'Cancelled';
+//     } else {
+//       // Otherwise, mark order as "Partially Cancelled"
+//       order.status = 'Partially Cancelled';
+//     }
+
+//     // Refund to the user's wallet
+//     const user = await User.findById(order.userId);
+    
+//     // Get the latest wallet transaction balance
+//     const latestTransaction = user.walletTransactions.length > 0
+//       ? user.walletTransactions[user.walletTransactions.length - 1].walletBalance
+//       : 0;
+
+//     const newWalletBalance = latestTransaction + totalRefundAmount;
+
+//     // Create a new wallet transaction for the refund
+//     user.walletTransactions.push({
+//       type: 'refund',
+//       amount: totalRefundAmount, // Amount being refunded
+//       walletBalance: newWalletBalance, // New wallet balance
+//       description: `Refund for partially cancelled order #${order.orderId}`
+//     });
+
+//     await user.save(); // Save the user after updating the wallet
+
+//     await order.save(); // Save the updated order status
+
+//     console.log('Order partially cancelled and refunded to wallet');
+//     res.json({ success: true, message: 'Order partially cancelled and refunded to wallet successfully.' });
+
+//   } catch (error) {
+//     console.error('Error cancelling product(s):', error);
+//     res.status(500).send('Server error');
+//   }
+// };
 const OrderCancel = async (req, res) => {
   try {
-    const orderId = req.params.orderId;
-    console.log(`Received cancellation request for order ID: ${orderId} by user: ${req.user._id}`);
-    
-    const order = await Order.findOne({ orderId: orderId,userId: req.user._id });
-    if (!order) {
-      console.log(`Order not found for orderId: ${orderId} and userId: ${req.user._id}`);
-      return res.status(404).send({ success: false, message: 'Order not found' });
+    const { orderId } = req.params;
+    const { productIds } = req.body; // Array of product IDs to cancel
+
+    if (!productIds || productIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'No products selected for cancellation.' });
     }
 
-    // Update the product quantities back to inventory
-    for (const item of order.orderedItems) {
-      console.log(`Restoring quantity ${item.quantity} for product ID: ${item.product}`);
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { quantity: item.quantity }
-      });
+    // Find the order by ID
+    const order = await Order.findOne({ _id: orderId, userId: req.user._id });
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
     }
-    // Refund to wallet
+
+    let allItemsCancelled = true; // Flag to track if all items are cancelled
+    let totalRefundAmount = 0;
+    const updatedOrderedItems = [];
+
+    // Loop through each ordered item and check if it's in the cancellation request
+    for (const item of order.orderedItems) {
+      if (productIds.includes(item.product.toString())) { // If product is selected for cancellation
+        console.log(`Cancelling product ${item.product} with quantity ${item.quantity}`);
+        
+        // Refund the item price * quantity
+        const refundAmount = item.price * item.quantity;
+        totalRefundAmount += refundAmount;
+
+        // Restore product quantity back to inventory
+        await Product.findByIdAndUpdate(item.product, { $inc: { quantity: item.quantity } });
+
+        // Mark item as cancelled
+        item.status = 'Cancelled';
+      }
+
+      // Check if any item is not cancelled
+      if (item.status !== 'Cancelled') {
+        allItemsCancelled = false;
+      }
+
+      updatedOrderedItems.push(item);
+    }
+
+    // Update the order with remaining products
+    order.orderedItems = updatedOrderedItems;
+
+    // If all items are cancelled, mark the order status as "Cancelled"
+    if (allItemsCancelled) {
+      order.status = 'Cancelled';
+    } else {
+      // Otherwise, mark the order as "Partially Cancelled"
+      order.status = 'Partially Cancelled';
+    }
+
+    // Refund to the user's wallet
     const user = await User.findById(order.userId);
     
-    // Get the last transaction to calculate the current wallet balance
+    // Get the latest wallet transaction balance
     const latestTransaction = user.walletTransactions.length > 0
       ? user.walletTransactions[user.walletTransactions.length - 1].walletBalance
       : 0;
 
-    const newWalletBalance = latestTransaction + order.finalAmount;
+    const newWalletBalance = latestTransaction + totalRefundAmount;
 
     // Create a new wallet transaction for the refund
     user.walletTransactions.push({
       type: 'refund',
-      amount: order.finalAmount, // Amount being refunded
+      amount: totalRefundAmount, // Amount being refunded
       walletBalance: newWalletBalance, // New wallet balance
-      description: `Refund for cancelled order #${order.orderId}`
+      description: `Refund for partially cancelled order #${order.orderId}`
     });
 
-    await user.save();
+    await user.save(); // Save the user after updating the wallet
+    await order.save(); // Save the updated order status
 
-    order.status = 'Cancelled';
-    await order.save();
+    console.log('Order cancellation processed successfully.');
+    res.json({ success: true, message: 'Order updated and refunded to wallet successfully.' });
 
-    console.log('Order successfully cancelled');
-    res.json({ success: true, message: 'Order cancelled and refunded to wallet successfully.' });
   } catch (error) {
-    console.error('Error cancelling order:', error);
+    console.error('Error cancelling product(s):', error);
     res.status(500).send('Server error');
   }
-
 };
+
+
 
 const OrderReturn = async (req, res) => {
   try {
-    const orderId = req.params.orderId;
-    console.log(`Received return request for order ID: ${orderId} by user: ${req.user._id}`);
-     // Check if req.user exists
-     if (!req.user) {
-      console.error('req.user is undefined');
-      return res.status(401).json({ success: false, message: 'User not authenticated' });
+    const { orderId } = req.params;
+    const { productIds } = req.body; // Array of product IDs to return
+
+    if (!productIds || productIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'No products selected for return.' });
     }
-    const order = await Order.findOne({ orderId: orderId,userId: req.user._id });
+
+    const order = await Order.findOne({ _id: orderId, userId: req.user._id });
     if (!order || order.status !== 'Delivered') {
       return res.status(400).json({ success: false, message: 'Order cannot be returned.' });
     }
 
-    // Find the user by ID
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      console.error(`User not found for ID: ${req.user._id}`);
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
+    let totalRefundAmount = 0;
 
-    // Calculate the new wallet balance
+    // Loop through each ordered item and mark it as returned if selected
+    order.orderedItems.forEach(item => {
+      if (productIds.includes(item.product.toString())) {
+        console.log(`Returning product ${item.product} with quantity ${item.quantity}`);
+        
+        // Refund the item price * quantity
+        const refundAmount = item.price * item.quantity;
+        totalRefundAmount += refundAmount;
+
+        // Mark the item as returned
+        item.status = 'Returned';
+
+        // Restore product quantity back to inventory
+        Product.findByIdAndUpdate(item.product, { $inc: { quantity: item.quantity } }).exec();
+      }
+    });
+
+    // Update the overall order status based on whether some items remain unreturned
+    const isAllReturned = order.orderedItems.every(item => item.status === 'Returned');
+    order.status = isAllReturned ? 'Returned' : 'Partially Returned';
+
+    // Refund to the user's wallet
+    const user = await User.findById(order.userId);
     const latestTransaction = user.walletTransactions.length > 0
       ? user.walletTransactions[user.walletTransactions.length - 1].walletBalance
       : 0;
-    const newWalletBalance = latestTransaction + order.finalAmount;
+
+    const newWalletBalance = latestTransaction + totalRefundAmount;
 
     // Create a new wallet transaction for the refund
     user.walletTransactions.push({
       type: 'refund',
-      amount: order.finalAmount, // Amount being refunded
-      walletBalance: newWalletBalance, // New wallet balance
-      description: `Refund for returned order #${order.orderId}`
+      amount: totalRefundAmount,
+      walletBalance: newWalletBalance,
+      description: `Refund for returned products in order #${order.orderId}`
     });
 
-    await user.save();
-    order.status = 'Returned';
-    await order.save();
-    
-    res.json({ success: true, message: 'Order returned and refunded to wallet successfully.' });
+    await user.save(); // Save the user after updating the wallet
+    await order.save(); // Save the updated order status
+
+    console.log('Order partially returned and refunded to wallet');
+    res.json({ success: true, message: 'Selected items have been returned and refunded to the wallet.' });
+
   } catch (error) {
-    console.error('Error returning order:', error);
-    res.status(500).json({ success: false, message: 'An error occurred. Please try again.' });
+    console.error('Error returning product(s):', error);
+    res.status(500).send('Server error');
   }
 };
+
 const downloadInvoice = async (req, res) => {
  
   try {

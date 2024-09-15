@@ -8,29 +8,55 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/all.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
+    <!-- flaticon CSS -->
+    <link rel="stylesheet" href="css/flaticon.css">
+    <link rel="stylesheet" href="css/themify-icons.css">
+    <!-- font awesome CSS -->
+    <link rel="stylesheet" href="css/magnific-popup.css">
   <style>
-    .order-details {
+       body {
+      background-color: #ffffff;
+    }
+    .container {
       margin-top: 20px;
+    }
+    .order-summary {
+      background-color: #e9e8e8;
+      color: #000;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .order-item {
+      background-color: #e9e8e8;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
     }
     .order-item img {
-      width: 100px;
+      width: 120px;
       height: auto;
-      margin-right: 10px;
+      margin-right: 20px;
+      border-radius: 4px;
     }
-    .order-address {
-      margin-top: 20px;
+    .order-item-details {
+      flex-grow: 1;
     }
     .order-actions {
-      margin-top: 20px;
+      display: flex;
+      justify-content: flex-start;
+      margin-top: 15px;
     }
-    .cancel-button {
-      background-color: red;
-      color: white;
+    .order-actions button {
+      margin-right: 10px;
     }
-    .return-button{
-      background-color: red;
-      color: rgb(255, 255, 255);
+    .total-paid {
+     
+      padding: 15px;
+      text-align: center;
+      border-radius: 4px;
     }
     .status-cancelled {
       color: red;
@@ -43,77 +69,80 @@
 <body>
   <%- include('header') %>
     <!-- Header part end-->
-    <section class="contact-section padding_top">
-  <div class="container order-details">
-   
-    <div class="row">
-      <div class="col-lg-12">
-        <!-- Loop through the orders array -->
-       
-          <div class="card mb-4">
-            <div class="card-header">
-              Order ID: <%= order.orderId %> | Status: <span class="<%= order.status === 'Cancelled' ? 'status-cancelled' : '' %>"><%= order.status %></span>
+    <div class="container padding_top">
+      <div class="container">
+        <!-- Order Summary Section -->
+        <div class="row order-item">
+          <!-- Left Column for Shipping Details -->
+          <div class="col-md-6">
+            <h5>Shipping Details</h5>
+            <p><strong>Recipient:</strong> <%= order.address.name %></p>
+            <p><strong>Address:</strong> <%= order.address.street %>, <%= order.address.city %>, <%= order.address.state %> - <%= order.address.zipcode %></p>
+            <p><strong>Phone:</strong> <%= order.address.phone %></p>
+          </div>
+    
+          <!-- Right Column for Order Details -->
+          <div class="col-md-6 order-details">
+            <h5>Order ID: <%= order._id %></h5>
+            <p>Order Status: <span class="<%= order.status === 'Cancelled' ? 'status-cancelled' : '' %>"><%= order.status %></span></p>
+            <p>Order Total: ₹<%= order.totalPrice %></p>
+            <% if (order.status === 'Delivered') { %>
+              <button class="btn btn-secondary download-invoice-btn" data-order-id="<%= order._id %>">Download Invoice </button>
+                <% } %>
+            
+            
+          </div>
+        </div>
+    
+        <!-- Loop through Ordered Items -->
+        <% order.orderedItems.forEach((item, index) => { %>
+          <div class="order-item row">
+            <div class="col-md-2">
+              <img src="<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>">
             </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-8">
-                  <h5>Items</h5>
-                  <ul class="list-unstyled">
-                    <% order.orderedItems.forEach(item => { %>
-                      <li class="media order-item">
-                        <img src="<%= item.product.productImage[0] %>" class="mr-3" alt="<%= item.product.productName %>">
-                        <div class="media-body">
-                          <h5 class="mt-0 mb-1"><%= item.product.productName %></h5>
-                          Quantity: <%= item.quantity %> | Price: $<%= item.price %>
-                          <!-- Show Return/Cancel Status Below Product -->
-                          <% if (item.status === 'Returned') { %>
-                            <p class="text-danger">Returned</p>
-                          <% } else if (item.status === 'Cancelled') { %>
-                            <p class="text-warning">Cancelled</p>
-                          <% } else { %>
-                            <p class="text-success">Ordered</p>
-                          <% } %>
-                        </div>
-                      </li>
-                    <% }) %>
-                  </ul>
-                  <p>Total Price: $<%= order.totalPrice %></p>
+            <div class="col-md-6 order-details">
+              <h6><%= item.product.productName %></h6>
+              <p>Qty: <%= item.quantity %> | Price: ₹<%= item.price %></p>
+              <p>Order Status: <%= item.status %></p>
+              <div class="order-status">
+                <h5>Payment Status: 
+                  <span class="<%= order.paymentStatus === 'Failed' ? 'text-danger' : 'text-success' %>">
+                    <%= order.paymentStatus %>
+                  </span>
+                </h5>
                 </div>
-                <div class="col-md-4 order-address">
-                  <h5>Shipping Address</h5>
-                  <p><strong>Name:</strong> <%= order.address.name %></p>
-                  <p><strong>Type:</strong> <%= order.address.addressType %></p>
-                  <p><strong>Landmark:</strong> <%= order.address.landMark %></p>
-                  <p><strong>City:</strong> <%= order.address.city %>, <strong>State:</strong> <%= order.address.state %></p>
-                  <div class="order-status">
-                    <h5>Payment Status: 
-                      <span class="<%= order.paymentStatus === 'Failed' ? 'text-danger' : 'text-success' %>">
-                        <%= order.paymentStatus %>
-                      </span>
-                    </h5>
-                    </div>
-                    <!-- Show the Retry Payment button if the payment failed -->
-                  <% if (order.paymentStatus === 'Failed') { %>
-                    <button class="btn btn-primary" id="retryPaymentButton" onclick="retryPayment('<%= order._id %>', '<%= order.razorpayOrderId %>')">
-                      Retry Payment
-                    </button>
-                  <% } %>
-                </div>
-              </div>
+                <!-- Show the Retry Payment button if the payment failed -->
+                <% if (order.paymentStatus === 'Failed') { %>
+                  <button class="btn btn-primary" id="retryPaymentButton" onclick="retryPayment('<%= order._id %>', '<%= order.razorpayOrderId %>')">
+                    Retry Payment
+                  </button>
+                <% } %>
+            </div>
+            
+            <div class="col-md-6 order-actions">
               <div class="order-actions">
+                <% if (order.paymentStatus !== 'Failed') { %> 
                 <% if (order.status === 'Pending') { %>
-                  <button class="btn cancel-button" onclick="showCancelModal('<%= order.orderId %>', <%= JSON.stringify(order.orderedItems) %>)">Cancel Order</button>
+                  <button class="btn btn_3 cancel-button" onclick="showCancelModal('<%= order.orderId %>', <%= JSON.stringify(order.orderedItems) %>)">Cancel Order</button>
 
                 <% } else if (order.status === 'Delivered') { %>
-                  <button class="btn cancel-button" onclick="showReturnModal('<%= order.orderId %>', <%= JSON.stringify(order.orderedItems) %>)">Return Order</button>
+                  <button class="btn btn_3 cancel-button" onclick="showReturnModal('<%= order.orderId %>', <%= JSON.stringify(order.orderedItems) %>)">Return Order</button>
 
                        <!-- // <button class="btn return-button" onclick="confirmReturn('<%= order.orderId %>')">Return Order</button> -->
                     
                 <% } %>
+                <% } %>
             </div>
-            
             </div>
           </div>
+        <% }) %>
+    
+        <!-- Total Paid Section -->
+        <div class="total-paid btn-secondary">
+          <h6>Total Paid: ₹<%= order.totalPrice %></h6>
+        </div>
+      </div>
+    
           <!-- Cancel Modal -->
           <div id="cancelOrderModal" class="modal fade" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">
@@ -182,6 +211,31 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
+    document.querySelectorAll('.download-invoice-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const orderId = this.getAttribute('data-order-id'); // Get the order ID from the button attribute
+
+      // Fetch the invoice as a PDF from the server
+      fetch(`/download-invoice/${orderId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.blob())
+      .then(blob => {
+        // Create a URL for the blob and create a temporary link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice_${orderId}.pdf`; // Set the filename for the download
+        document.body.appendChild(a); // Append the link to the body
+        a.click(); // Programmatically click the link to trigger download
+        a.remove(); // Remove the link after the download is triggered
+      })
+      .catch(error => console.error('Error downloading the invoice:', error));
+    });
+  });
   // cancel modal function
   function showCancelModal(orderId, orderedItems) {
   if (!Array.isArray(orderedItems)) {

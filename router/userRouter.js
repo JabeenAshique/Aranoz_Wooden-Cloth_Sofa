@@ -85,8 +85,6 @@ router.post('/wishlist/remove',  authMiddlewares.ensureAuthenticated,wishlistCon
 router.get('/wishlist/count', (req, res) => {
     res.json({ wishlistCount: req.session.wishlistCount || 0 });
 });
-
-
 //success Page
 
 router.get('/success', (req, res) => {

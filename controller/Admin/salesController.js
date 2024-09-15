@@ -172,100 +172,113 @@ exports.downloadExcelReport = async (req, res) => {
     }
 };
 
+
 exports.downloadPdfReport = async (req, res) => {
     try {
         const { period, startDate, endDate } = req.body;
 
+        // Filter the orders based on the provided date range
         const filter = applyFilter(period, startDate, endDate);
         const orders = await fetchOrders(filter);
 
         let totalAmount = 0;
         let totalQuantity = 0;
-        const totalCount = orders.length;  
+        const totalCount = orders.length;
 
-        
         orders.forEach(order => {
             totalAmount += order.finalAmount;
             totalQuantity += order.orderedItems.reduce((acc, item) => acc + item.quantity, 0);
         });
 
-
+        // Create a new PDF document
         const doc = new PDFDocument({ size: 'A4', margin: 30 });
 
+        // Set headers for the file download
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=sales_report.pdf');
 
+        // Pipe the document to the response
         doc.pipe(res);
 
+        // Add the report title
         doc.fontSize(18).text('Sales Report', { align: 'center' });
         doc.moveDown(1.5);
-        doc.fontSize(10).text(`Period: ${period.charAt(0).toUpperCase() + period.slice(1)}`, { align: 'left' });
-        if (startDate && endDate) {
-            doc.text(`From: ${startDate} To: ${endDate}`, { align: 'left' });
-        }
-        doc.moveDown(0.5);
 
+        // Add company information
+        doc.fontSize(10)
+            .text('Your Company Name', 40, 50)
+            .text('Street Address', 40, 65)
+            .text('City, State, ZIP Code', 40, 80)
+            .text('Phone Number, Website, Email', 40, 95);
+
+        // Add the report date range and logo area
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 400, 50)
+            .text(`From: ${startDate} To: ${endDate}`, 400, 65)
+            .text('Company Logo Here', 400, 80, { align: 'right' });
+
+        // Add a separator line
+        doc.moveTo(40, 120).lineTo(570, 120).stroke();
+
+        // Define the positions for the columns
         const columnPositions = {
-            date: 40,       
-            orderId: 120,    
-            product: 240,   
-            quantity: 420,   
-            coupon: 480,     
-            discount: 540,   
-            total: 600       
+            month: 40,
+            date: 100,
+            cost: 160,
+            invoice: 240,
+            salesRep: 320,
+            total: 400,
+            paid: 480,
+            balanceDue: 560
         };
-        
-        doc.fontSize(9).fillColor('#444444');
-        doc.text('Date', columnPositions.date, undefined, { continued: true });
-        doc.text('Order ID', columnPositions.orderId, undefined, { continued: true });
-        doc.text('Product', columnPositions.product, undefined, { continued: true });
-        doc.text('Quantity', columnPositions.quantity, undefined, { continued: true });
-        doc.text('Coupon', columnPositions.coupon, undefined, { continued: true });
-        doc.text('Discount', columnPositions.discount, undefined, { continued: true });
-        doc.text('Total', columnPositions.total);
+
+        // Add the table header
+        doc.fontSize(10).fillColor('#444444');
+        doc.text('Month', columnPositions.month, 130, { continued: true });
+        doc.text('Date', columnPositions.date, 130, { continued: true });
+        doc.text('Cost', columnPositions.cost, 130, { continued: true });
+        doc.text('Invoice #', columnPositions.invoice, 130, { continued: true });
+        doc.text('Sales Rep.', columnPositions.salesRep, 130, { continued: true });
+        doc.text('Total', columnPositions.total, 130, { continued: true });
+        doc.text('Paid', columnPositions.paid, 130, { continued: true });
+        doc.text('Balance Due', columnPositions.balanceDue, 130);
         doc.moveDown(0.5);
-        doc.strokeColor('#aaaaaa').lineWidth(1).moveTo(columnPositions.date, doc.y).lineTo(columnPositions.total + 40, doc.y).stroke();
+        doc.strokeColor('#aaaaaa').lineWidth(1).moveTo(40, 145).lineTo(570, 145).stroke();
         doc.moveDown(0.5);
 
+        // Loop through the orders to populate the rows
         orders.forEach(order => {
-            // Slicing the order ID into two parts for better readability
-            const orderIdPart1 = order.orderId.slice(0, order.orderId.length / 2);
-            const orderIdPart2 = order.orderId.slice(order.orderId.length / 2);
-            
-            // Format the order creation date and slice it into two parts
-            const orderDate = order.createdOn.toDateString(); // Convert date to string
-            const orderDatePart1 = orderDate.slice(0, orderDate.length / 2);
-            const orderDatePart2 = orderDate.slice(orderDate.length / 2);
-        
-            // Concatenate product names into a single string
-             // Split the product names into two parts to ensure they fit within the column
-            const productNames = order.orderedItems.map(item => {
-                const productName = item.product.productName;
-                const productNamePart1 = productName.slice(0, productName.length / 2);
-                const productNamePart2 = productName.slice(productName.length / 2);
-                return `${productNamePart1}\n${productNamePart2}`;
-            }).join(',\n'); // Join with comma and newline for each product
-        
-            // Adding the data to the PDF document
-            doc.text(`${orderDatePart1}\n${orderDatePart2}`, columnPositions.date, undefined, { continued: true });
-            doc.text(`${orderIdPart1}\n${orderIdPart2}`, columnPositions.orderId, undefined, { continued: true });
-            doc.text(`${productNames}`, columnPositions.product, undefined, { continued: true });
-            doc.text(order.orderedItems.reduce((acc, item) => acc + item.quantity, 0), columnPositions.quantity, undefined, { continued: true });
-            // doc.text(order.couponCode || 'N/A', columnPositions.coupon, undefined, { continued: true });
-            doc.text(`₹${order.discount + order.couponDiscount}`, columnPositions.discount, undefined, { continued: true });
-            doc.text(`₹${order.finalAmount}`, columnPositions.total);
+            const orderMonth = new Date(order.createdOn).toLocaleDateString('en-US', { month: 'numeric', year: 'numeric' });
+            const orderDate = new Date(order.createdOn).toLocaleDateString();
+            const invoiceNumber = order._id;
+            const salesRep = order.salesRep || '---';
+            const total = order.totalPrice;
+            const paid = order.paidAmount || 0;
+            const balanceDue = total - paid;
+
+            doc.text(orderMonth, columnPositions.month, undefined, { continued: true });
+            doc.text(orderDate, columnPositions.date, undefined, { continued: true });
+            doc.text(`₹${order.finalAmount}`, columnPositions.cost, undefined, { continued: true });
+            doc.text(invoiceNumber, columnPositions.invoice, undefined, { continued: true });
+            doc.text(salesRep, columnPositions.salesRep, undefined, { continued: true });
+            doc.text(`₹${total}`, columnPositions.total, undefined, { continued: true });
+            doc.text(`₹${paid}`, columnPositions.paid, undefined, { continued: true });
+            doc.text(`₹${balanceDue}`, columnPositions.balanceDue);
             doc.moveDown(0.5);
-            doc.strokeColor('#aaaaaa').lineWidth(0.5).moveTo(columnPositions.date, doc.y).lineTo(columnPositions.total + 40, doc.y).stroke();
+            doc.strokeColor('#aaaaaa').lineWidth(0.5).moveTo(40, doc.y).lineTo(570, doc.y).stroke();
             doc.moveDown(0.5);
         });
-         // Adding the total amount, total quantity, and total count at the bottom of the PDF
-         doc.moveDown(2);
-         doc.fontSize(12).fillColor('#000000').text('Total Orders:', 40, undefined, { continued: true });
-         doc.text(totalCount, columnPositions.orderId, undefined, { continued: true });  // Display total count of orders
-         doc.text('Total Quantity:', columnPositions.quantity, undefined, { continued: true });
-         doc.text(totalQuantity, columnPositions.quantity, undefined, { continued: true });
-         doc.text('Total Amount:', 540, undefined, { continued: true });
-         doc.text(`₹${totalAmount}`, columnPositions.total);
+
+        // Add total summaries at the bottom of the page
+        doc.moveDown(2);
+        doc.fontSize(12).fillColor('#000000');
+        doc.text('Total Orders:', 40, undefined, { continued: true });
+        doc.text(totalCount, columnPositions.invoice, undefined, { continued: true });
+        doc.text('Total Quantity:', columnPositions.salesRep, undefined, { continued: true });
+        doc.text(totalQuantity, columnPositions.totalAmount, undefined, { continued: true });
+        doc.text('Total Amount:', columnPositions.paid, undefined, { continued: true });
+        doc.text(`₹${totalAmount}`, columnPositions.balanceDue);
+
+        // Finalize the PDF
         doc.end();
     } catch (error) {
         console.error('Error generating PDF report:', error);

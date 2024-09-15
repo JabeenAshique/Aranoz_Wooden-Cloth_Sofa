@@ -301,28 +301,84 @@ res.status(500).json({ success: false, message: 'An error occurred. Please try a
 }
 };
 
+// const loadOrderPage = async (req, res) => {
+//   try {
+//     const wishlistCount = req.session.wishlistCount || 0;
+//     const cartCount = req.session.cartCount || 0;
+//     const userId = req.user._id; 
+
+//     // Fetch order and populate product details, including image
+//     const orders = await Order.find({ userId })
+//       .populate({
+//         path: 'orderedItems.product',
+//         select: 'productName productImage price', // Ensure 'productImage' and 'productName' are selected
+//       })
+//       .populate('address')
+//       .sort({ createdOn: -1 })
+//       .lean();
+
+//     // Log the orders to verify the images are fetched
+//     console.log(orders);
+
+//     res.render('order', { orders, cartCount, wishlistCount });
+//   } catch (error) {
+//     console.error('Error loading order page:', error);
+//     res.status(500).send(error.message);
+//   }
+// };
+
 
 const loadOrderPage = async (req, res) => {
   try {
     const wishlistCount = req.session.wishlistCount || 0;
     const cartCount = req.session.cartCount || 0;
-    const userId = req.user._id; 
-    const orders = await Order.find({ userId })
-    .sort({ createdOn: -1 })
-    .populate('orderedItems.product', 'productName') 
-    .lean();
+    const userId = req.user._id;
+    
+    // Retrieve the search query from the URL
+    const searchQuery = req.query.search ? req.query.search.trim() : '';
+    
+    // Base filter to search for orders by this user
+    let orderFilter = { userId }; 
+    
+    // Log to debug the search query
+    console.log('Search Query:', searchQuery);
 
-    for (let order of orders) {
-      order.products = await Product.find({ _id: { $in: order.orderedItems.map(item => item.product) } }, 'productName').lean();
+    // Log to debug the final query that will be used in MongoDB
+    console.log('Final Query:', orderFilter);
+
+    // Fetch orders based on the status or default search query
+    let orders = await Order.find(orderFilter)
+      .populate({
+        path: 'orderedItems.product',
+        select: 'productName productImage price', 
+      })
+      .populate('address')
+      .sort({ createdOn: -1 })
+      .lean();
+
+    // Log fetched orders to see what's coming from the database
+    console.log('Fetched Orders:', orders);
+
+    // Additional filter for product name search
+    if (searchQuery) {
+      orders = orders.filter(order => 
+        order.orderedItems.some(item => 
+          item.product && item.product.productName && item.product.productName.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
     }
 
-    res.render('order', { orders,cartCount,wishlistCount });
+    // If no orders are found, log that for debugging
+    if (!orders || orders.length === 0) {
+      console.log('No matching orders found for the search query.');
+    }
+
+    res.render('order', { orders: orders, cartCount, wishlistCount });
   } catch (error) {
+    console.error('Error in loadOrderPage:', error);
     res.status(500).send(error.message);
   }
-}
-
-
+};
 
 
 const loadOrder_detailsPage = async (req, res) => {
@@ -337,90 +393,6 @@ const loadOrder_detailsPage = async (req, res) => {
   }
 }
 
-// const OrderCancel = async (req, res) => {
-//   try {
-//     const { orderId } = req.params;
-//     const { productIds } = req.body; // Array of product IDs to cancel
-
-//     if (!productIds || productIds.length === 0) {
-//       return res.status(400).json({ success: false, message: 'No products selected for cancellation.' });
-//     }
-
-//     // Find the order by ID
-//     const order = await Order.findOne({ _id: orderId, userId: req.user._id });
-//     if (!order) {
-//       return res.status(404).json({ success: false, message: 'Order not found' });
-//     }
-
-//     // Filter out the products that are being canceled from the orderedItems
-//     const canceledItems = order.orderedItems.filter(item => productIds.includes(item.product._id.toString()));
-
-//     if (canceledItems.length === 0) {
-//       return res.status(400).json({ success: false, message: 'No matching products found in order' });
-//     }
-
-//     let totalRefundAmount = 0;
-//     const updatedOrderedItems = [];
-
-//     // Loop through each ordered item and check if it's in the cancellation request
-//     for (const item of order.orderedItems) {
-//       if (productIds.includes(item.product.toString())) { // If product is selected for cancellation
-//         console.log(`Cancelling product ${item.product} with quantity ${item.quantity}`);
-        
-//         // Refund the item price * quantity
-//         const refundAmount = item.price * item.quantity;
-//         totalRefundAmount += refundAmount;
-
-//         // Restore product quantity back to inventory
-//         await Product.findByIdAndUpdate(item.product, { $inc: { quantity: item.quantity } });
-
-//       } else {
-//         // Keep the non-cancelled items in the updatedOrderedItems array
-//         updatedOrderedItems.push(item);
-//       }
-//     }
-
-//     // Update the order with remaining products, if any
-//     order.orderedItems = updatedOrderedItems;
-
-//     // If all items are cancelled, mark order status as "Cancelled"
-//     if (updatedOrderedItems.length === 0) {
-//       order.status = 'Cancelled';
-//     } else {
-//       // Otherwise, mark order as "Partially Cancelled"
-//       order.status = 'Partially Cancelled';
-//     }
-
-//     // Refund to the user's wallet
-//     const user = await User.findById(order.userId);
-    
-//     // Get the latest wallet transaction balance
-//     const latestTransaction = user.walletTransactions.length > 0
-//       ? user.walletTransactions[user.walletTransactions.length - 1].walletBalance
-//       : 0;
-
-//     const newWalletBalance = latestTransaction + totalRefundAmount;
-
-//     // Create a new wallet transaction for the refund
-//     user.walletTransactions.push({
-//       type: 'refund',
-//       amount: totalRefundAmount, // Amount being refunded
-//       walletBalance: newWalletBalance, // New wallet balance
-//       description: `Refund for partially cancelled order #${order.orderId}`
-//     });
-
-//     await user.save(); // Save the user after updating the wallet
-
-//     await order.save(); // Save the updated order status
-
-//     console.log('Order partially cancelled and refunded to wallet');
-//     res.json({ success: true, message: 'Order partially cancelled and refunded to wallet successfully.' });
-
-//   } catch (error) {
-//     console.error('Error cancelling product(s):', error);
-//     res.status(500).send('Server error');
-//   }
-// };
 const OrderCancel = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -573,19 +545,18 @@ const OrderReturn = async (req, res) => {
 };
 
 const downloadInvoice = async (req, res) => {
- 
   try {
     const orderId = req.params.orderId;
 
     // Fetch the order data from the database
-    const order = await Order.findOne({ orderId: orderId })
-        .populate('userId')
-        .populate('orderedItems.product')
-        .populate('address')
-        .lean();
+    const order = await Order.findById(orderId)
+      .populate('userId')
+      .populate('orderedItems.product')
+      .populate('address')
+      .lean();
 
     if (!order) {
-        return res.status(404).send('Order not found');
+      return res.status(404).send('Order not found');
     }
 
     // Initialize the PDF document
@@ -598,72 +569,62 @@ const downloadInvoice = async (req, res) => {
     // Stream the PDF document to the response
     doc.pipe(res);
 
-     // Add Invoice Title
-     doc.fontSize(18).text('Invoice', { align: 'center' });
-     doc.moveDown(1.5);
+    // Add Invoice Title and Header
+    doc.fontSize(18).text('Invoice', { align: 'right' });
+    doc.moveDown(1);
 
-     // Add Order ID, Date, and Customer Info
-     doc.fontSize(12).text(`Order ID: ${order.orderId}`);
-     doc.text(`Date: ${new Date(order.createdOn).toLocaleDateString()}`);
-     doc.moveDown(1);
+    // Add company details (left top)
+    doc.fontSize(10)
+      .text('Aranoz.', 40, 50)
+      .text('Kalarikkal veliyil', 40, 65)
+      .text('Alappuzha, 688561', 40, 80)
+      .text('Phone: 8921663696', 40, 95);
+    
+    // Add Bill To (recipient details)
+    doc.text('Bill To:', 40, 130)
+      .text(`Name: ${order.address.name}`, 40, 145)
+      .text(`Address: ${order.address.city}, ${order.address.state}, ${order.address.zipcode}`, 40, 160)
+      .text(`Phone: ${order.address.phone}`, 40, 175);
 
-     // Customer Details
-     doc.text(`Customer: ${order.userId.name}`);
-     doc.text(`Email: ${order.userId.email}`);
-     doc.moveDown(1);
+    // Add Invoice Details (right top)
+    doc.text(`Invoice no: ${order._id}`, 400, 130, { align: 'right' })
+      .text(`Date: ${new Date(order.createdOn).toLocaleDateString()}`, 400, 155, { align: 'right' })
+      
 
-     // Shipping Address
-     doc.text('Shipping Address:', { underline: true });
-     doc.text(`${order.address.name}`);
-     doc.text(`${order.address.city}, ${order.address.state}`);
-     doc.text(`${order.address.addressType}`);
-     doc.text(`${order.address.landMark}`);
-     doc.moveDown(1);
+    // Add a horizontal line separator
+    doc.moveTo(40, 200).lineTo(570, 200).stroke();
 
-     // Table Headers for Ordered Items
-     const columnPositions = {
-         product: 40,
-         quantity: 120,  // Position for quantity
-         price: 220,     // Position for price
-         total: 320      // Position for total
-     };
+    // Add Table Header for Product Items
+    doc.fontSize(10).text('Description', 40, 220)
+      .text('Quantity', 220, 220)
+      .text('Unit Price', 320, 220)
+      .text('Amount', 420, 220);
 
-     // Headers for the table
-     doc.fontSize(10).fillColor('#444444');
-     doc.text('Product', columnPositions.product, undefined, { continued: true });
-     doc.text('Quantity', columnPositions.quantity, undefined, { continued: true });
-     doc.text('Price', columnPositions.price, undefined, { continued: true });
-     doc.text('Total', columnPositions.total);
-     doc.moveDown(0.5);
-     doc.strokeColor('#aaaaaa').lineWidth(1).moveTo(columnPositions.product, doc.y).lineTo(columnPositions.total + 30, doc.y).stroke();
-     doc.moveDown(1);
+    // Draw another horizontal line under the table header
+    doc.moveTo(40, 235).lineTo(570, 235).stroke();
 
-     // List Ordered Items
-     order.orderedItems.forEach(item => {
-         doc.text(item.product.productName, columnPositions.product, undefined, { continued: true });
-         doc.text(item.quantity, columnPositions.quantity, undefined, { continued: true });
-         doc.text(`₹${item.price}`, columnPositions.price, undefined, { continued: true });
-         doc.text(`₹${item.price * item.quantity}`, columnPositions.total);
-         doc.moveDown(1);
-     });
+    // List Ordered Items
+    let y = 250;
+    order.orderedItems.forEach(item => {
+      doc.text(item.product.productName, 40, y)
+        .text(item.quantity, 220, y)
+        .text(`₹${item.price}`, 320, y)
+        .text(`₹${item.price * item.quantity}`, 420, y);
+      y += 20;
+    });
 
-     // Add Total Price, Discounts, and Final Amount
-     const summaryPosition = columnPositions.total - 30; // Align to the total column
+    // Total, Paid, and Balance
+    doc.moveTo(40, y + 10).lineTo(570, y + 10).stroke(); // Separator line
+    doc.text('Total amount', 320, y + 30).text(`₹${order.totalPrice}`, 420, y + 30);
+    
 
-     doc.moveDown(2);
-     doc.fontSize(12).fillColor('#000000');
-     doc.text(`Discount: ₹${order.discount + order.couponDiscount}`, summaryPosition, undefined, { align: 'right' });
-     doc.text(`Total Price: ₹${order.totalPrice}`, summaryPosition, undefined, { align: 'right' });
-     doc.text(`Final Amount: ₹${order.finalAmount}`, summaryPosition, undefined, { align: 'right' });
-
-     // End the PDF and close the stream
-     doc.end();
- } catch (error) {
-     console.error('Error generating invoice PDF:', error);
-     res.status(500).json({ success: false, message: 'Error generating invoice PDF' });
- }
+    // End the PDF document
+    doc.end();
+  } catch (error) {
+    console.error('Error generating invoice PDF:', error);
+    res.status(500).json({ success: false, message: 'Error generating invoice PDF' });
+  }
 };
-
 
 const retryPayment = async (req, res) => {
   try {

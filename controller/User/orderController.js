@@ -373,7 +373,7 @@ const loadOrderPage = async (req, res) => {
       console.log('No matching orders found for the search query.');
     }
 
-    res.render('Order', { orders: orders, cartCount, wishlistCount });
+    res.render('order', { orders: orders, cartCount, wishlistCount });
   } catch (error) {
     console.error('Error in loadOrderPage:', error);
     res.status(500).send(error.message);

@@ -23,7 +23,8 @@ const Order = require('../../models/orderSchema');
             const orders = await Order.find(searchCriteria)
                 .populate('userId')
                 .skip(skip) // Skip the previous pages' results
-                .limit(limit) // Limit the number of results per page
+                .limit(limit)
+                .sort({ createdOn: -1 }) // Limit the number of results per page
                 .lean();
     
             const totalPages = Math.ceil(totalOrders / limit); // Calculate total pages

@@ -128,8 +128,6 @@
 
                 <% } else if (order.status === 'Delivered') { %>
                   <button class="btn btn_3 cancel-button" onclick="showReturnModal('<%= order.orderId %>', <%= JSON.stringify(order.orderedItems) %>)">Return Order</button>
-
-                       <!-- // <button class="btn return-button" onclick="confirmReturn('<%= order.orderId %>')">Return Order</button> -->
                     
                 <% } %>
                 <% } %>

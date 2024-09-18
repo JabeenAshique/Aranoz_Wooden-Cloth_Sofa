@@ -176,7 +176,13 @@
                 <% coupons.forEach(function(coupon) { %>
                     <tr >
                         <td><%= coupon.name %></td>
-                        <td><%= coupon.isList %></td>
+                        <td>
+                            <% if (coupon.isList === 'Active') { %>
+                                <span >Active</span>
+                            <% } else { %>
+                                <span >Inactive</span>
+                            <% } %>
+                        </td>
                         <td><%= new Date(coupon.expireOn).toLocaleDateString() %></td>
                         <td><%= new Date(coupon.createdOn).toLocaleDateString() %></td>
                         <td data-id="<%= coupon._id %>">

@@ -139,7 +139,7 @@
                     </div>
                   </td>
                   <td>
-                    <h5><span id="total-<%= item.product._id %>"><%= item.product.salePrice * item.quantity %></span></h5>
+                    <h5><span id="total-<%= item.product._id %>">₹<%= item.product.salePrice * item.quantity %></span></h5>
                   </td>
                   <td>
                     <button class="btn_1" onclick="removeFromCart('<%= item.product._id %>')"> <i class="fas fa-trash-alt remove-btn"></i></button>

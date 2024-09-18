@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 exports.getCouponPage = async (req, res) => {
     try {
-        let currentDate = new Date().toLocaleDateString('en-GB'); // format: DD/MM/YYYY
+        const currentDate = new Date(); // Current date for comparison
         const searchQuery = req.query.search || ''; // Get the search query from the URL
         const page = parseInt(req.query.page) || 1; // Get the page number from the URL or default to 1
         const limit = 5; // Number of coupons per page
@@ -22,13 +22,13 @@ exports.getCouponPage = async (req, res) => {
             .skip((page - 1) * limit) // Skip the previous pages' results
             .limit(limit); // Limit the number of results per page
 
-        // Update the status of coupons based on the current date
+        
+        // Set the status of each coupon based on the expiration date
         coupons.forEach(coupon => {
-            if (coupon.enddate === currentDate) {
-                coupon.isList = "Inactive";
-            }
+            const expireDate = new Date(coupon.expireOn);
+            // If expire date is greater than or equal to today, set status to Active
+            coupon.isList = expireDate >= currentDate ? 'Active' : 'Inactive';
         });
-        console.log("Search Query: ", searchQuery);
 
         // Render the coupon page with search results and pagination data
         res.render('coupon', {

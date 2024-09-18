@@ -333,18 +333,16 @@ const loadOrderPage = async (req, res) => {
     const wishlistCount = req.session.wishlistCount || 0;
     const cartCount = req.session.cartCount || 0;
     const userId = req.user._id;
-    
-    // Retrieve the search query from the URL
-    const searchQuery = req.query.search ? req.query.search.trim() : '';
-    
+   
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = 5; // Number of orders per page
+
     // Base filter to search for orders by this user
     let orderFilter = { userId }; 
-    
-    // Log to debug the search query
-    console.log('Search Query:', searchQuery);
 
-    // Log to debug the final query that will be used in MongoDB
-    console.log('Final Query:', orderFilter);
+
+    // Fetch total number of orders
+    let totalOrders = await Order.countDocuments(orderFilter);
 
     // Fetch orders based on the status or default search query
     let orders = await Order.find(orderFilter)
@@ -353,27 +351,31 @@ const loadOrderPage = async (req, res) => {
         select: 'productName productImage price', 
       })
       .populate('address')
+      .skip((page - 1) * limit) // Skip the previous pages' orders
+      .limit(limit) // Limit the results to the specified number per page
       .sort({ createdOn: -1 })
       .lean();
 
     // Log fetched orders to see what's coming from the database
     console.log('Fetched Orders:', orders);
 
-    // Additional filter for product name search
-    if (searchQuery) {
-      orders = orders.filter(order => 
-        order.orderedItems.some(item => 
-          item.product && item.product.productName && item.product.productName.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      );
-    }
+    
 
     // If no orders are found, log that for debugging
     if (!orders || orders.length === 0) {
       console.log('No matching orders found for the search query.');
     }
 
-    res.render('order', { orders: orders, cartCount, wishlistCount });
+    const totalPages = Math.ceil(totalOrders / limit); // Calculate total pages
+
+    res.render('order', { 
+      orders: orders, 
+      cartCount, 
+      wishlistCount, 
+      currentPage: page, 
+      totalPages: totalPages, 
+     
+    });
   } catch (error) {
     console.error('Error in loadOrderPage:', error);
     res.status(500).send(error.message);

@@ -6,8 +6,8 @@
    <!-- Required meta tags -->
    <meta charset="utf-8">
    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-   <title>Order Details</title>
-   <link rel="icon" href="img/favicon.png">
+   <title>aranoz</title>
+    <link rel="icon" href="img/favicon.png">
    <!-- Bootstrap CSS -->
    <link rel="stylesheet" href="css/bootstrap.min.css">
    <!-- animate CSS -->
@@ -152,6 +152,25 @@
   font-size: 1em;
   margin-top: 5px;
 }
+.pagination .page-item .page-link {
+    color: #ff5085; 
+    border: 1px solid  #ff5085;
+}
+.pagination .page-item .page-link:hover {
+    background-color: #ff5085; 
+    color: white; 
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #ff5085; 
+  border-color:  #ff5085;
+    color: white; 
+}
+
+.pagination .page-item.active .page-link:hover {
+  background-color:  #ff5085; 
+  color: white;
+}
 
  </style>
 </head>
@@ -160,12 +179,6 @@
   <%- include('header') %>
   <section class="order-section padding_top">
     <div class="container">
-      <!-- Search Bar -->
-      <div class="search-bar">
-        <input type="text" placeholder="Search your orders here" id="search-input">
-        <button class=" btn btn_3" id="search-btn" type="button">Search Orders</button>
-      </div>
-  
       <!-- Order List -->
       <% if (orders && orders.length > 0) { %>
         <% orders.forEach(order => { %>
@@ -214,6 +227,30 @@
       <% } else { %>
         <p>No ordered items found.</p>
       <% } %>
+      <!-- Pagination Controls -->
+
+      <div class="pagination-controls">
+        <ul class="pagination">
+          <% if (currentPage > 1) { %>
+            <li class="page-item">
+              <a class="page-link" href="/order?page=<%= currentPage - 1 %>">Previous</a>
+            </li>
+          <% } %>
+      
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+              <a class="page-link" href="/order?page=<%= i %>"><%= i %></a>
+            </li>
+          <% } %>
+      
+          <% if (currentPage < totalPages) { %>
+            <li class="page-item">
+              <a class="page-link" href="/order?page=<%= currentPage + 1 %>">Next</a>
+            </li>
+          <% } %>
+        </ul>
+      </div>
+      
     </div>
   </section>
   
@@ -260,12 +297,7 @@
         })
         .catch(error => console.error('Error fetching wishlist count:', error));
 });
-document.getElementById('search-btn').addEventListener('click', function () {
-    const searchQuery = document.getElementById('search-input').value;
-    console.log(searchQuery)
-      window.location.href = `/order?search=${encodeURIComponent(searchQuery)}`;
-    
-  });
+
   </script>
 </body>
 

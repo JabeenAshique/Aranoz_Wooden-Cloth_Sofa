@@ -25,10 +25,6 @@ const couponSchema = new mongoose.Schema({
         type : Number,
         required : true
     },
-    isList : {
-        type : Boolean,
-        
-    },
     userId : [{
         type : mongoose.Schema.Types.ObjectId,
         ref :'User'

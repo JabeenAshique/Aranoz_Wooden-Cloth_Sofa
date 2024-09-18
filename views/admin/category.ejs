@@ -58,27 +58,7 @@
             <div class="row">
                 <div class="col-md-12 pt-5">
                     <h5>Category Management</h5>
-<!--                    
-                    <form id="category-form" action="<%= editCategory ? '/admin/category/edit/' + editCategory._id : '/admin/category/add' %>" method="POST" onsubmit="return validateForm()">
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Category Name</label>
-                            <input type="text" class="form-control" id="name" name="name" value="<%= editCategory ? editCategory.name : '' %>" required>
-                            <div id="name-error" class="error-message">Name cannot start with an underscore or space.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <input type="text" class="form-control" id="description" name="description" value="<%= editCategory ? editCategory.description : '' %>" required>
-                            <div id="description-error" class="error-message">Name cannot start with an underscore or space.</div>
 
-                        </div>
-                        <div class="mb-3">
-                            <label for="categoryOffer" class="form-label">Offer</label>
-                            <input type="number" class="form-control" id="categoryOffer" name="categoryOffer" value="<%= editCategory ? editCategory.categoryOffer : '' %>" required>
-                            <div id="offer-error" class="error-message">Offer value cannot be negative.</div>
-
-                        </div>
-                        <button type="submit" class="btn btn-primary"><%= editCategory ? 'Update Category' : 'Add Category' %></button>
-                    </form> -->
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                         Add Category
                     </button>
@@ -260,4 +240,4 @@ const categories = JSON.stringify(categories.map(cat => cat.name.toLowerCase()))
     </script>
 
 </body>
-</html> -->
+</html> 

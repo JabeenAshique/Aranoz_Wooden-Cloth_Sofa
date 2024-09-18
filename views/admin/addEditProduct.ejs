@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- cropper js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    
     <style>
        
         .toast-success {
@@ -29,6 +30,7 @@
 </head>
 <body>
    
+    <%- include('sidebar') %>
 
 <main class="mt-5 pt-3">
     <div class="container-fluid content">    
@@ -75,25 +77,7 @@
                         <input type="number" class="form-control" id="quantity" name="quantity" value="<%= product ? product.quantity : '' %>" min="1" required>
                         <div class="invalid-feedback">Quantity must be at least 1.</div>
                     </div>
-                    <!-- <div class="form-group">
-                      <label for="productImage">Product Images</label>
-                      <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" multiple>
-                      <div class="invalid-feedback">Product images are required.</div>
-                      <div id="new-image-container"></div>
-                  </div> -->
-                  <!-- <div class="form-group">
-                    <label for="productImage">Product Images</label>
-                    <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" multiple>
-                    <div class="invalid-feedback">Product images are required.</div>
-                    <div id="crop-container" style="display: none;">
-                        <img id="image-to-crop" src="" alt="Image to crop" style="max-width: 100%;">
-                        <div>
-                            <button type="button" id="cropImageBtn" class="btn btn-primary">Crop Image</button>
-                        </div>
-                    </div>
-                    <div id="new-image-container"></div>
-                </div> -->
-                
+                 
                   <% if (product && product.productImage && product.productImage.length > 0) { %>
                       <input type="hidden" id="removedImages" name="removedImages" value="">
                       <div id="image-container">
@@ -105,18 +89,7 @@
                           <% }) %>
                       </div>
                   <% } %>
-                  <!-- <div class="form-group">
-                    <label for="productImage">Product Images</label>
-                    <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" multiple>
-                    <div class="invalid-feedback">Product images are required.</div>
-                    <div id="crop-container" style="display: none;">
-                        <img id="image-to-crop" src="" alt="Image to crop" style="max-width: 100%;">
-                        <div>
-                            <button type="button" id="cropImageBtn" class="btn btn-primary">Crop Image</button>
-                        </div>
-                    </div>
-                    <div id="new-image-container"></div>
-                </div> -->
+               
                 <div class="form-group">
                     <label for="productImage">Product Images</label>
                     <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" multiple>
@@ -270,30 +243,7 @@ document.getElementById('cropImageBtn').addEventListener('click', function() {
     
 });
 
-// Handle form submission to upload all cropped images at once
 
-//     fetch(this.action, {
-//     method: 'POST',
-//     body: formData
-// })
-// .then(response => {
-//     if (!response.ok) {
-//         throw new Error('Error submitting form');
-//     }
-//     return response.json();
-// })
-// .then(data => {
-//     console.log('Product and images uploaded:', data);
-//     if (data.success) {
-//         // Optionally redirect or show success message
-//         window.location.href = '/admin/product'; // Adjust as needed
-//     }
-// })
-// .catch(error => {
-//     console.error('Error uploading product and images:', error);
-// });
-
-// });
 document.getElementById('productForm').addEventListener('submit', function(event) {
     event.preventDefault();  // Prevent default form submission
 
@@ -313,10 +263,22 @@ document.getElementById('productForm').addEventListener('submit', function(event
         console.log('Product and images uploaded:', data);
         if (data.success) {
             // Optionally redirect or show success message
-            alert('Product saved successfully!');
+            Swal.fire({
+            title: 'Success!',
+            text: 'Product saved successfully!',
+            icon: 'success',
+            confirmButtonText: 'OK'
+        }).then(() => {
             window.location.href = '/admin/product'; // Redirect to product page
+        });
         } else {
-            alert('Error: ' + data.error);
+        // SweetAlert error message
+        Swal.fire({
+            title: 'Error!',
+            text: data.error,
+            icon: 'error',
+            confirmButtonText: 'OK'
+            });
         }
     })
     .catch(error => {

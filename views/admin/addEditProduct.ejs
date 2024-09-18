@@ -123,52 +123,108 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    document.getElementById('productForm').addEventListener('submit', function(event) {
-        let isValid = true;
-        const productName = document.getElementById('productName');
-        const description = document.getElementById('description');
-        const regularPrice = document.getElementById('regularPrice');
-        const salePrice = document.getElementById('salePrice');
-        const productOffer = document.getElementById('productOffer');
-        const quantity = document.getElementById('quantity');
-        
-        // Clear previous error messages
-        document.querySelectorAll('.invalid-feedback').forEach(el => el.style.display = 'none');
+  document.getElementById('productForm').addEventListener('submit', function(event) {
+    event.preventDefault();  // Prevent default form submission
 
-        // Validate product name and description
-        if (productName.value.startsWith('_') || productName.value.startsWith(' ') || productName.value.trim() === '') {
-            productName.nextElementSibling.style.display = 'block';
-            isValid = false;
-        }
-        if (description.value.startsWith('_') || description.value.startsWith(' ') || description.value.trim() === '') {
-            description.nextElementSibling.style.display = 'block';
-            isValid = false;
-        }
+    let isValid = true;
+    const productName = document.getElementById('productName');
+    const description = document.getElementById('description');
+    const regularPrice = document.getElementById('regularPrice');
+    const salePrice = document.getElementById('salePrice');
+    const productOffer = document.getElementById('productOffer');
+    const quantity = document.getElementById('quantity');
+    const productImage = document.getElementById('productImage');
 
-        // Validate prices
-        if (regularPrice.value < 0) {
-            regularPrice.nextElementSibling.style.display = 'block';
-            isValid = false;
-        }
-        if (salePrice.value < 0) {
-            salePrice.nextElementSibling.style.display = 'block';
-            isValid = false;
-        }
-        if (productOffer.value < 0 || productOffer.value > 100) {
-            productOffer.nextElementSibling.style.display = 'block';
-            isValid = false;
-        }
+    // Clear previous error messages
+    document.querySelectorAll('.invalid-feedback').forEach(el => el.style.display = 'none');
 
-        // Validate quantity
-        if (quantity.value < 1) {
-            quantity.nextElementSibling.style.display = 'block';
-            isValid = false;
-        }
+    // Validate product name and description
+    if (productName.value.startsWith('_') || productName.value.startsWith(' ') || productName.value.trim() === '') {
+        productName.nextElementSibling.style.display = 'block';
+        isValid = false;
+    }
+    if (description.value.startsWith('_') || description.value.startsWith(' ') || description.value.trim() === '') {
+        description.nextElementSibling.style.display = 'block';
+        isValid = false;
+    }
 
-        if (!isValid) {
-            event.preventDefault();
-        }
-      });
+    // Validate prices
+    if (regularPrice.value < 0) {
+        regularPrice.nextElementSibling.style.display = 'block';
+        isValid = false;
+    }
+    if (salePrice.value < 0) {
+        salePrice.nextElementSibling.style.display = 'block';
+        isValid = false;
+    }
+    if (productOffer.value < 0 || productOffer.value > 100) {
+        productOffer.nextElementSibling.style.display = 'block';
+        isValid = false;
+    }
+
+    // Validate quantity
+    if (quantity.value < 1) {
+        quantity.nextElementSibling.style.display = 'block';
+        isValid = false;
+    }
+
+    // Validate image file type and size
+    if (productImage.files.length > 0) {
+        Array.from(productImage.files).forEach(file => {
+            // Validate file type (accepting only image types)
+            if (!file.type.match('image/jpeg') && !file.type.match('image/webp')) {
+                alert('Only JPG or PNG image files are allowed.');
+                isValid = false;
+            }
+
+            // Validate file size (e.g., max 2MB)
+            const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+            if (file.size > maxSize) {
+                alert('Image size must be less than 2MB.');
+                isValid = false;
+            }
+        });
+    }
+
+    // Only proceed with form submission if validation is successful
+    if (isValid) {
+        const formData = new FormData(this);  // Collect the form data
+
+        // Append all cropped images to the form data
+        croppedImages.forEach((image, index) => {
+            formData.append('productImage', image, `cropped-image-${index}.png`);
+        });
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json()) // Parse JSON response
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Product saved successfully!',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.href = '/admin/product'; // Redirect to product page
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.error,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error uploading product and images:', error);
+        });
+    }
+});
+
     
       document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.remove-image').forEach(button => {
@@ -244,47 +300,6 @@ document.getElementById('cropImageBtn').addEventListener('click', function() {
 });
 
 
-document.getElementById('productForm').addEventListener('submit', function(event) {
-    event.preventDefault();  // Prevent default form submission
-
-    const formData = new FormData(this);  // Collect the form data
-
-    // Append all cropped images to the form data
-    croppedImages.forEach((image, index) => {
-        formData.append('productImage', image, `cropped-image-${index}.png`);
-    });
-
-    fetch(this.action, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json()) // Parse JSON response
-    .then(data => {
-        console.log('Product and images uploaded:', data);
-        if (data.success) {
-            // Optionally redirect or show success message
-            Swal.fire({
-            title: 'Success!',
-            text: 'Product saved successfully!',
-            icon: 'success',
-            confirmButtonText: 'OK'
-        }).then(() => {
-            window.location.href = '/admin/product'; // Redirect to product page
-        });
-        } else {
-        // SweetAlert error message
-        Swal.fire({
-            title: 'Error!',
-            text: data.error,
-            icon: 'error',
-            confirmButtonText: 'OK'
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error uploading product and images:', error);
-    });
-});
 
 </script>
 
